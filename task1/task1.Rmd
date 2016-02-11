@@ -1,0 +1,57 @@
+---
+title: "task1"
+author: "Linas Syvis"
+date: "Thursday, February 11, 2016"
+output: html_document
+---
+
+This is Task1 for Practical Econometrics II course made by Linas Syvis. The code was taken from the source: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/ and the whole task was made by an example from: http://shiny.rstudio.com/articles/rmarkdown.html
+
+
+These two data sets will be used to generate the graphs below.
+```{r}
+# Two variables
+df <- read.table(header=TRUE, text="
+ cond yval
+    A 2
+    B 2.5
+    C 1.6
+    Z 3.8
+")
+
+# Three variables
+df2 <- read.table(header=TRUE, text="
+ cond1 cond2 yval
+    A      I 2
+    A      J 2.5
+    A      K 1.6
+    B      I 2.2
+    B      J 2.4
+    B      Z 1.2
+    C      I 1.7
+    C      J 2.3
+    C      K 1.9
+")
+```
+Instead of changing colors globally, you can map variables to colors – in other words, make the color conditional on a variable, by putting it inside an aes() statement.
+```{r}
+# Bars: x and fill both depend on cond2
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat="identity")
+
+# Bars with other dataset; fill depends on cond2
+ggplot(df2, aes(x=cond1, y=yval)) + 
+    geom_bar(aes(fill=cond2),   # fill depends on cond2
+             stat="identity",
+             colour="purple",    # Purple outline for all
+             position=position_dodge()) # Put bars side-by-side instead of stacked
+
+# Lines and points; colour depends on cond2
+ggplot(df2, aes(x=cond1, y=yval)) + 
+    geom_line(aes(colour=cond2, group=cond2)) + # colour, group both depend on cond2
+    geom_point(aes(colour=cond2),               # colour depends on cond2
+               size=3)                          # larger points, different shape
+## Equivalent to above; but move "colour=cond2" into the global aes() mapping
+# ggplot(df2, aes(x=cond1, y=yval, colour=cond2)) + 
+#    geom_line(aes(group=cond2)) +
+#    geom_point(size=3)
+```
