@@ -34,7 +34,11 @@ df2 <- read.table(header=TRUE, text="
 ")
 ```
 Instead of changing colors globally, you can map variables to colors – in other words, make the color conditional on a variable, by putting it inside an aes() statement.
+You will also need to download and install a package called "ggplot2".
 ```{r}
+install.packages('ggplot2')
+library("ggplot2")
+
 # Bars: x and fill both depend on cond2
 ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat="identity")
 
