@@ -5,7 +5,7 @@ date: "Thursday, February 11, 2016"
 output: html_document
 ---
 
-This is Task1 for Practical Econometrics II course made by Linas Syvis. The code was taken from the source: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/ and the whole task was made by an example from: http://shiny.rstudio.com/articles/rmarkdown.html
+This is Task1 for Practical Econometrics II course made by Linas Syvis. The code was taken from the source: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
 
 
 These two data sets will be used to generate the graphs below.
