@@ -11,7 +11,7 @@ Kauliukai
 
 Salyga:
 
-Pirmasis zaidejas meta viena kauliuka ir fiksuojamas atsivertusiu tasku skaicius. Antrasis zaidejas meta du kauliukus ir fiksuojamas dydis: max(x1,x2)???1max(x1,x2)???1, kur x1x1 ir x2x2 zymi pirmojo ir antrojo kauliuku iskritusiu akiu skaiciu. Jeigu zaideju gautu tasku skaiciai yra lygus, tai eksperimentas kartojamas is naujo (ir taip kartojama tol, kol galiausiai nustatomas laimetojas). Kokia tikimybe laimeti pirmajam zaidëjui?
+Pirmasis zaidejas meta viena kauliuka ir fiksuojamas atsivertusiu tasku skaicius. Antrasis zaidejas meta du kauliukus ir fiksuojamas dydis: max(x1,x2)-1, kur x1 ir x2 zymi pirmojo ir antrojo kauliuku iskritusiu akiu skaiciu. Jeigu zaideju gautu tasku skaiciai yra lygus, tai eksperimentas kartojamas is naujo (ir taip kartojama tol, kol galiausiai nustatomas laimetojas). Kokia tikimybe laimeti pirmajam zaidëjui?
 
 Programos kodas
 ====================================
