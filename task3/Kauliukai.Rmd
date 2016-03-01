@@ -1,0 +1,46 @@
+---
+title: "Kauliukai"
+author: "Linas Syvis"
+date: '2016 m kovas 1 d '
+output: html_document
+---
+
+
+Kauliukai
+====================================
+
+Salyga:
+
+Pirmasis þaidëjas meta vienà kauliukà ir fiksuojamas atsivertusiø taðkø skaièius. Antrasis þaidëjas meta du klausiukus ir fiksuojamas dydis: max(x1,x2)???1max(x1,x2)???1, kur x1x1 ir x2x2 þymi pirmojo ir antrojo kauliukø iðkritusiø akiø skaièiø. Jeigu þaidëjø gautø taðkø skaièiai yra lygus, tai eksperimentas kartojamas ið naujo (ir taip kartojama tol, kol galiausiai nustatomas laimëtojas). Kokia tikimybë laimëti pirmajam þaidëjui?
+
+Programos kodas
+====================================
+
+Funkcija, i kuria reikia ivesti, kiek kauliuku bus metama (grazina, tasku skaiciu).
+```{r}
+rolldice <- function(NDice){
+  if(NDice == 1)
+    sample(6, 1)
+  else
+    max(sample(6, size = 2, replace = TRUE))-1
+}
+```
+
+Funkcija, simuliuojanti zaidima (pagal uzduoties salyga), reikalaujanti dvieju argumentu (a ir b) ivedimo. Grazina TRUE, jei laimi pirmas zaidejas, FALSE, jei laimi antras.
+```{r}
+eksper <- function(a, b){
+  while(a == b)
+  {
+    a <- rolldice(1)
+    b <- rolldice(2)
+  }
+  return(a > b)
+}
+```
+
+Simuliuojami n zaidimu ir empyriskai randama tikimybe.
+```{r}
+n <- 10000
+varom = replicate(n, eksper(rolldice(1), rolldice(2)))
+mean(varom)
+```
