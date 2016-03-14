@@ -1,0 +1,86 @@
+---
+title: "Futbolas"
+author: "Linas Syvis"
+output: html_document
+---
+
+**Salyga:**
+
+(Issukis) Modeliuokime futbolo varzybu metu imusamu ivarciu kieki. Laiko intervalai tarp ivarciu modeliuojami su eksponentiniu skirstiniu (eksponentinio skirstinio parametra pasiulykite patys). Kaip tuomet atrodo ivarciu pasiskirstymas varzybu tekmeje? Taip pat paziûrekite koki skirstini turi varzybu baigties skirstinys. Ar tai primena Poisson'o skirstini? Ar galite atlikti formalu testa?
+
+Programos kodas
+====================================
+
+**Funkcija, simuliuojanti futbolo rungtynes. Grazina laika(us), kelinta minute imustas ivartis.**
+```{r}
+y <- 0#isivedame nauja kintamaji.
+eksp <- function()
+{
+  x <- 0
+  i <- 1#isivedame naujus funkcijos kintamuosius(x atstos rungtyniu laika, o i bus ivarcio indeksas).
+  while(x < 90)
+  {
+    y[i] <- rexp(1, 0.02)#sugeneruojame skaiciu pagal eksponentini skirstini (pagal salyga - laiko intervala iki ivarcio) su parametru 0.02.
+    if(x + y[i] <= 90) #patikriname, ar ta laiko intervala pridejus prie praejusio rungtyniu laiko, nevirsijamas rungtyniu laiko limitas (90 min).
+    {
+      x <- x + y[i]#jei nevirsijame 90 min, sugeneruota laiko intervala pridedame prie jau praejusio rungtyniu laiko.
+      i = i + 1
+    }
+    else#jei if salyga netenkinama, istriname sugeneruota skaiciu, uzbaigiame rungtynes. 
+    {
+      y = y[-i]
+      x = 90
+    }
+  }
+  return(cumsum(y))
+}
+```
+
+**n varzybu simuliacija.**
+```{r}
+n <- 10000
+sim = replicate(n, eksp())
+```
+
+**Ivarciu pasiskirstymas varzybu tekmeje:**
+```{r}
+laikai <- unlist(sim)#issaugome ivarciu laikus.
+hist(laikai, probability = TRUE)
+lines(density(laikai), col = "red")#taip atrodo ivarciu pasiskirstymo varzybu tekmeje histograma ir tankio funkcija.
+```
+
+**Ar vaizdas primena tolyguji skirstini? Paziurim:**
+```{r}
+laikas <- cut(laikai, breaks = c(-Inf, 10, 20, 30, 40, 50, 60, 70, 80, Inf))#suskirstome ivarciu laikus i intervalus.
+table(laikas)#ivarciu dazniu lentele.
+dazn <- as.vector(table(laikas))#issaugome daznius is dazniu lenteles kaip atskira vektoriu.
+tik <- function(i)#funkcija suskaiciuoja tolygiojo skirstinio teorines tikimybes reiksmei patekti i kuri nors dazniu lenteles intervala.
+{
+  probs[i] = punif(i * 10, min = 0, max = 90) - punif((i-1) * 10, min = 0, max = 90)
+  return(probs[i])
+}
+probs <- 0
+for(i in 1:8)
+probs[i] <- tik(i)#apskaiciuojame intervalu tikimybes (paskutini intervala paliekame "uodegai").
+papild <- (1 - sum(probs))#randame papildini.
+chisq.test(dazn, p = c(probs, papild))#chi kvadrato testas patikrina hipoteze, ar ivarciai varzybu tekmeje pasiskirste pagal tolyguji skirstini su alternatyva, kad nera pasiskirste pagal tolyguji skirstini. [I galima perspejima (warning) nekreipti demesio].
+```
+p-value > 0.05, tai reiskia, kad priimame H0, vadinasi chi kvadrato testas mums leidzia teigti, kad ivarciai varzybu tekmeje pasiskirste pagal tolyguji skirstini.
+
+**O koki skirstini turi varzybu baigties skirstinys?**
+```{r}
+golai <- sapply(sim, length)#issaugome ivarciu kieki per kiekvienas varzybas.
+hist(golai, probability = TRUE)
+lines(density(golai), col = "dark green")#taip atrodo varzybu baigciu histograma ir tankio funkcija.
+```
+
+**Ar vaizdas primena poisson'o skirstini? Patikrinam:**
+```{r}
+table(golai)#varzybu baigciu dazniu lentele.
+dazn <- as.vector(table(golai))#issaugome daznius is dazniu lenteles kaip atskira vektoriu.
+probs = dpois(0:(length(dazn)-2), lambda = mean(golai))
+papild <- (1 - sum(probs))#apskaiciuojame tikimybes ir papildini
+chisq.test(c(dazn), p = c(probs, papild))#chi kvadrato testas patikrina ar musu duomenys atitinka poisson'o skirstini su alternatyva, kad neatitinka. [I galima perspejima (warning) nekreipti demesio].
+```
+
+p-value > 0.05, H0 priimam, vadinasi chi kvadrato testas mums leidzia teigti, kad rungtyniu baigtys pasiskirsciusios pagal Poisson'o skirstini.

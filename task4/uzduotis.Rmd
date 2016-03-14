@@ -1,0 +1,101 @@
+---
+title: "Task 4"
+author: "Linas Syvis"
+output: html_document
+---
+
+**Salyga:**
+
+Aplanke task4 yra duomenu failas, kuriame rasite nekilnojamo turto (o tiksliau gyvenamuju butu) kainas ir kai kurias ju charakteristikas. Jusu uzduotis atlikti issamia tiesine regresija. Lygtis reikalinga prekyboms agentams, kad geriau suprastu kokia įtaka skirtingos charakteristikos daro galutinei kainai.
+
+Sprendimas
+====================================
+
+
+
+**Nuskaitome duomenis.**
+```{r}
+setwd(dir = "C:/Users/Linas/Documents/Ekonometrija 2.2/Praktine ekonometrija")
+data <- read.csv2("data.csv")
+```
+
+
+
+Tikrinsime kintamuju multikoliniaruma. 
+Tinkama priemone patikrinti, ar modelyje egzistuoja multikolinearumo problema, yra Variance Inflation Factor (VIF). Jei kuris nors VIF koeficientas > 10, tai yra neblogas argumentas teigti, kad modelyje yra multikolinearumas. Kad apskaiciuotume kintamuju VIF, reikes parsisiusti paketa {usdm}.
+```{r, message = FALSE}
+library(usdm)
+vif(data)#dvieju kintamuju (garsoIzoliacija ir silumosLaidumas) VIF > 10, tai sufleruoja apie multikolinearuma.
+
+cor(data$garsoIzoliacija, data$silumosLaidumas)#is tikro, sie du kintamieji koreliuoja labai stipriai (cor = 0.9535669), todel uztenka naudoti tik viena ju.
+
+ndata <- data[,-4]#zmonems renkantis busta, labiau rupi silumos laidumas, todel ismetame garsoIzoliacija is duomenu.
+
+vif(ndata)
+```
+Naujuose duomenyse multikolinearumo problemos nebera.
+
+**Ieskosime isskirciu.**
+```{r, message = FALSE}
+modelis1 <- lm(kaina ~ plotas + aukstas + silumosLaidumas + atstumasIkiPrekybosCentro, data = ndata)
+par(mfrow = c(2,2))
+plot(modelis1)#sudarome modeli ir isbreziame duomenu diagramas. Plika akimi galime pastebeti galimas isskirtis (253, 254).
+
+#Kad surastume isskirtis, reikes parsisiusti paketa {car}.
+library(car)
+outlierTest(modelis1)#si funkcija suranda duomenu isskirtis. Tai yra 253 ir 254 eilutese esantys duomenys.
+
+databe <- ndata[-c(253, 254),]
+#pasaliname isskirtis.
+```
+
+
+
+**Tikriname heteroskedastiskuma.**
+```{r}
+
+modelis2 <- lm(kaina ~ plotas + aukstas + silumosLaidumas + atstumasIkiPrekybosCentro, data = databe)
+#sukuriame modeli (duomenys be isskirciu).
+
+ncvTest(modelis2)#si funkcija atlieka testa su nuline hipoteze, kad modelis homoskedastiskas ir alternatyva, kad modelis heteroskedastiskas.
+
+#p-value > 0.05, todel priimame H0, tai reiskia modelis nera heteroskedastiskas.
+```
+
+
+
+**Pasaliname nereiksmingus narius**
+```{r}
+summary(modelis2)#apskaicuojame koeficientu ivertinius (stulpelis Estimate Std.).
+
+#kintamojo atstumasIkiPrekybosCentro p-value = 0.295, tai leidzia daryti isvada, kad jis nera reiksmingas (p-value > 0.05) ir galime ji pasalinti is modelio.
+
+modelis3 <- lm(kaina ~ plotas + aukstas + silumosLaidumas, data = databe)
+summary(modelis3)
+
+```
+Naujame modelyje nebera nereiksmingu kintamuju.
+
+
+
+**Tikriname del autokoreliacijos.**
+```{r}
+durbinWatsonTest(modelis3)#funkcija patikrina, ar liekanos autokoreliuoja
+```
+p-value > 0.05, vadinasi liekanose autokorealiacijos nera.
+
+```{r}
+par(mfrow = c(1,1))
+hist(resid(modelis3), probability = TRUE, xlim = c(-7000, 7000), ylim = c(0, 0.00017))
+lines(density(resid(modelis3)), col = "red")#isbreze modelio liekanu histograma ir tankio funkcija, matome, kad modelio liekanos yra pasiskirsciusios pagal normaluji skirstini. Tai tik papildoma salyga pasitikrinti, ar musu modelis "geras".
+```
+
+
+
+AKAIKE kriterijus "baudzia" uz i modeli itrauktus nereiksmingus narius, todel jis yra vienas geriausiu rodikliu norint palyginti, kuris modelis yra tikslesnis. Kuo mazesnis AKAIKE, tuo tikslesnis modelis.
+```{r}
+AIC(modelis1)
+AIC(modelis2)
+AIC(modelis3)
+```
+Matome, kad paskutiniojo modelio AKAIKE maziausias, vadinasi jis tiksliausiai apraso duotus duomenis.
