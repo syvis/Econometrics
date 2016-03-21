@@ -16,137 +16,86 @@ Sprendimas
 **Nuskaitome duomenis.**
 ```{r}
 setwd(dir = "C:/Users/Linas/Documents/Ekonometrija 2.2/Praktine ekonometrija")
-data <- read.csv2("data.csv", header = TRUE)
+data <- read.csv2("data.csv")
 ```
 
 
 
-**Tikrinsime kintamuju multikoliniaruma.**
-Tinkama priemone patikrinti, ar modelyje egzistuoja multikolinearumo problema, yra Variance Inflation Factor (VIF). Jei kuris nors VIF koeficientas > 10, tai yra neblogas argumentas teigti, kad modelyje yra multikolinearumas.
+Tikrinsime kintamuju multikoliniaruma. 
+Tinkama priemone patikrinti, ar modelyje egzistuoja multikolinearumo problema, yra Variance Inflation Factor (VIF). Jei kuris nors VIF koeficientas > 10, tai yra neblogas argumentas teigti, kad modelyje yra multikolinearumas. Kad apskaiciuotume kintamuju VIF, reikes parsisiusti paketa {usdm}.
 ```{r, message = FALSE}
 library(usdm)
-vif(data)
-```
-Dvieju kintamuju (garsoIzoliacija ir silumosLaidumas) VIF > 10, tai sufleruoja apie multikolinearuma.
+vif(data)#dvieju kintamuju (garsoIzoliacija ir silumosLaidumas) VIF > 10, tai sufleruoja apie multikolinearuma.
 
-```{r}
-cor(data$garsoIzoliacija, data$silumosLaidumas)
-```
-Is tikro, sie du kintamieji koreliuoja labai stipriai (cor = 0.9535669), todel uztenka naudoti tik viena ju. Zmonems renkantis busta, labiau rupi silumos laidumas (siuo atveju remiames logika, o ne skaiciais), todel ismetame kintamaji garsoIzoliacija is duomenu.
+cor(data$garsoIzoliacija, data$silumosLaidumas)#is tikro, sie du kintamieji koreliuoja labai stipriai (cor = 0.9535669), todel uztenka naudoti tik viena ju.
 
-```{r}
-ndata <- data[,-4]
+ndata <- data[,-4]#zmonems renkantis busta, labiau rupi silumos laidumas, todel ismetame garsoIzoliacija is duomenu.
+
 vif(ndata)
 ```
 Naujuose duomenyse multikolinearumo problemos nebera.
 
-
-
 **Ieskosime isskirciu.**
-```{r}
+```{r, message = FALSE}
 modelis1 <- lm(kaina ~ plotas + aukstas + silumosLaidumas + atstumasIkiPrekybosCentro, data = ndata)
 par(mfrow = c(2,2))
-plot(modelis1)
-```
-  
-Sudarome modeli ir isbreziame duomenu diagramas. Plika akimi galime pastebeti galimas isskirtis (253, 254).
+plot(modelis1)#sudarome modeli ir isbreziame duomenu diagramas. Plika akimi galime pastebeti galimas isskirtis (253, 254).
 
-```{r, message = FALSE}
+#Kad surastume isskirtis, reikes parsisiusti paketa {car}.
 library(car)
-outlierTest(modelis1)
-```
-outlierTest funkcija suranda duomenu isskirtis. Tai yra 253 ir 254 eilutese esantys duomenys.
+outlierTest(modelis1)#si funkcija suranda duomenu isskirtis. Tai yra 253 ir 254 eilutese esantys duomenys.
 
-```{r}
 databe <- ndata[-c(253, 254),]
-modelis1 <- lm(kaina ~ plotas + aukstas + silumosLaidumas + atstumasIkiPrekybosCentro, data = databe)
+#pasaliname isskirtis.
 ```
-Pasaliname isskirtis.
+
+
+
+**Tikriname heteroskedastiskuma.**
+```{r}
+
+modelis2 <- lm(kaina ~ plotas + aukstas + silumosLaidumas + atstumasIkiPrekybosCentro, data = databe)
+#sukuriame modeli (duomenys be isskirciu).
+
+ncvTest(modelis2)#si funkcija atlieka testa su nuline hipoteze, kad modelis homoskedastiskas ir alternatyva, kad modelis heteroskedastiskas.
+
+#p-value > 0.05, todel priimame H0, tai reiskia modelis nera heteroskedastiskas.
+```
 
 
 
 **Pasaliname nereiksmingus narius**
 ```{r}
-summary(modelis1)
-```
-Ivertiname kintamuju itaka kainai (stulpelis Estimate Std.).
+summary(modelis2)#apskaicuojame koeficientu ivertinius (stulpelis Estimate Std.).
 
-Kintamojo atstumasIkiPrekybosCentro p-value > 0.05, tai leidzia daryti isvada, kad jis nera reiksmingas (priimame H0, kad kintamojo koeficientas lygus 0) ir galime ji pasalinti is modelio.
-```{r}
-modelis2 <- lm(kaina ~ plotas + aukstas + silumosLaidumas, data = databe)
-summary(modelis2)
+#kintamojo atstumasIkiPrekybosCentro p-value = 0.295, tai leidzia daryti isvada, kad jis nera reiksmingas (p-value > 0.05) ir galime ji pasalinti is modelio.
+
+modelis3 <- lm(kaina ~ plotas + aukstas + silumosLaidumas, data = databe)
+summary(modelis3)
+
 ```
 Naujame modelyje nebera nereiksmingu kintamuju.
-
-Patikriname, ar naujas modelis yra tikslesnis. AKAIKE kriterijus "baudzia" uz i modeli itrauktus nereiksmingus narius, todel jis yra vienas geriausiu rodikliu norint palyginti, kuris modelis yra tikslesnis. Kuo mazesnis AKAIKE, tuo tikslesnis modelis.
-```{r}
-AIC(modelis1)
-AIC(modelis2)
-```
-Pagal AKAIKE antrasis modelis tikslesnis.
-  
-  
-  
-Pastebime, kad "aukstas" yra ranginis kintamasis, todel siuo atveju naudinga pasinaudoti "dummy variables" (naudinga todel, kad taip ivertinsime **kiekvieno** auksto individualia itaka kainai).
-```{r}
-aukstasdum = factor(databe$aukstas)
-modelis3 <- lm(kaina ~ plotas + aukstasdum + silumosLaidumas, data = databe)
-```
-Sukuriame nauja modeli, kur kiekvienas aukstas bus kaip atskiras kintamasis (pirmas aukstas bus pagrindas).
-
-
-```{r}
-summary(modelis3)
-```
-Pastebime, kad pagal itaka kainai labiausiai issiskiria pirmasis aukstas, todel galime visus kitus aukstus apjungti i viena kintamaji.
-
-```{r}
-aukstass=as.numeric(databe$aukstas!=1)
-modelis4 <- lm(kaina ~ plotas + aukstass + silumosLaidumas, data = databe)
-summary(modelis4)
-AIC(modelis2)
-AIC(modelis3)
-AIC(modelis4)
-```
-Pagal AKAIKE ketvirtasis modelis tiksliausias.
-
-
-**Tikriname heteroskedastiskuma.**
-```{r}
-ncvTest(modelis4)
-```
-ncvTest funkcija atlieka testa su nuline hipoteze, kad modelis homoskedastiskas ir alternatyva, kad modelis heteroskedastiskas.
-
-p-value > 0.05, todel priimame H0, tai reiskia modelis nera heteroskedastiskas.
 
 
 
 **Tikriname del autokoreliacijos.**
 ```{r}
-durbinWatsonTest(modelis4)
+durbinWatsonTest(modelis3)#funkcija patikrina, ar liekanos autokoreliuoja
 ```
-Funkcija patikrina del liekanu autokoreliacijos.
-
 p-value > 0.05, vadinasi liekanose autokorealiacijos nera.
 
-
-
-**Isbrezkime modelio liekanu histograma ir tankio funkcija.**
 ```{r}
 par(mfrow = c(1,1))
-hist(resid(modelis4), probability = TRUE, xlim = c(-7000, 7000), ylim = c(0, 0.0002))
-lines(density(resid(modelis4)), col = "red")
+hist(resid(modelis3), probability = TRUE, xlim = c(-7000, 7000), ylim = c(0, 0.00017))
+lines(density(resid(modelis3)), col = "red")#isbreze modelio liekanu histograma ir tankio funkcija, matome, kad modelio liekanos yra pasiskirsciusios pagal normaluji skirstini. Tai tik papildoma salyga pasitikrinti, ar musu modelis "geras".
 ```
-  
-Darome hipoteze, kad modelio liekanos yra pasiskirsciusios pagal normaluji skirstini. Tai tik papildoma sąlyga pasitikrinti, ar mūsų modelis "geras".
 
+
+
+AKAIKE kriterijus "baudzia" uz i modeli itrauktus nereiksmingus narius, todel jis yra vienas geriausiu rodikliu norint palyginti, kuris modelis yra tikslesnis. Kuo mazesnis AKAIKE, tuo tikslesnis modelis.
 ```{r}
-res <- as.vector(modelis4$residuals)
-shapiro.test(res)
+AIC(modelis1)
+AIC(modelis2)
+AIC(modelis3)
 ```
-shapiro.test funkcija patvirtina musu hipoteze, kad modelio liekanos issidesciusios pagal normaluji skirstini (p-value > 0.05).
-
-
-
-**Isvada:**
-  Isanalizavus duomenis galime teigti, kad geriausias modelis yra **modelis4**.
+Matome, kad paskutiniojo modelio AKAIKE maziausias, vadinasi jis tiksliausiai apraso duotus duomenis.

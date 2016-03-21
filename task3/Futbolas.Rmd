@@ -8,7 +8,7 @@ output: html_document
 
 (Issukis) Modeliuokime futbolo varzybu metu imusamu ivarciu kieki. Laiko intervalai tarp ivarciu modeliuojami su eksponentiniu skirstiniu (eksponentinio skirstinio parametra pasiulykite patys). Kaip tuomet atrodo ivarciu pasiskirstymas varzybu tekmeje? Taip pat paziûrekite koki skirstini turi varzybu baigties skirstinys. Ar tai primena Poisson'o skirstini? Ar galite atlikti formalu testa?
 
-Sprendimas
+Programos kodas
 ====================================
 
 **Funkcija, simuliuojanti futbolo rungtynes. Grazina laika(us), kelinta minute imustas ivartis.**
@@ -46,10 +46,10 @@ sim = replicate(n, eksp())
 ```{r}
 laikai <- unlist(sim)#issaugome ivarciu laikus.
 hist(laikai, probability = TRUE)
-lines(density(laikai), col = "red")#isbreziame ivarciu pasiskirstymo varzybu tekmeje histograma ir tankio funkcija.
+lines(density(laikai), col = "red")#taip atrodo ivarciu pasiskirstymo varzybu tekmeje histograma ir tankio funkcija.
 ```
 
-Ar vaizdas primena tolyguji skirstini? **Isitikiname, ar ivarciu pasiskirstymas varzybu tekmeje turi tolyguji skirstini:**
+**Ar vaizdas primena tolyguji skirstini? Paziurim:**
 ```{r}
 laikas <- cut(laikai, breaks = c(-Inf, 10, 20, 30, 40, 50, 60, 70, 80, Inf))#suskirstome ivarciu laikus i intervalus.
 table(laikas)#ivarciu dazniu lentele.
@@ -74,7 +74,7 @@ hist(golai, probability = TRUE)
 lines(density(golai), col = "dark green")#taip atrodo varzybu baigciu histograma ir tankio funkcija.
 ```
 
-**Ar duomenys turi Poisson'o skirstini? Patikrinam:**
+**Ar vaizdas primena poisson'o skirstini? Patikrinam:**
 ```{r}
 table(golai)#varzybu baigciu dazniu lentele.
 dazn <- as.vector(table(golai))#issaugome daznius is dazniu lenteles kaip atskira vektoriu.
@@ -84,6 +84,3 @@ chisq.test(c(dazn), p = c(probs, papild))#chi kvadrato testas patikrina ar musu 
 ```
 
 p-value > 0.05, H0 priimam, vadinasi chi kvadrato testas mums leidzia teigti, kad rungtyniu baigtys pasiskirsciusios pagal Poisson'o skirstini.
-
-* **Isvada:**
-Remdamiesi duota salyga ir gautais darbo rezultatais galime teigti, kad ivarciai futbolo varzybu tekmeje yra pasiskirste pagal tolyguji skirstini, o varzybu baigtys pasiskirsciusios pagal Poisson'o skirstini.
