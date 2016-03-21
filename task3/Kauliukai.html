@@ -110,16 +110,12 @@ $(document).ready(function () {
 
 <h1 class="title">Kauliukai</h1>
 <h4 class="author"><em>Linas Syvis</em></h4>
-<h4 class="date"><em>2016 m kovas 1 d</em></h4>
 
 </div>
 
 
-<div id="kauliukai" class="section level1">
-<h1>Kauliukai</h1>
 <p>Salyga:</p>
 <p>Pirmasis zaidejas meta viena kauliuka ir fiksuojamas atsivertusiu tasku skaicius. Antrasis zaidejas meta du kauliukus ir fiksuojamas dydis: max(x1,x2)-1, kur x1 ir x2 zymi pirmojo ir antrojo kauliuku iskritusiu akiu skaiciu. Jeigu zaideju gautu tasku skaiciai yra lygus, tai eksperimentas kartojamas is naujo (ir taip kartojama tol, kol galiausiai nustatomas laimetojas). Kokia tikimybe laimeti pirmajam zaidėjui?</p>
-</div>
 <div id="programos-kodas" class="section level1">
 <h1>Programos kodas</h1>
 <p>Funkcija, i kuria reikia ivesti, kiek kauliuku bus metama (grazina, tasku skaiciu).</p>
@@ -142,7 +138,7 @@ $(document).ready(function () {
 <pre class="r"><code>n &lt;- 10000
 varom = replicate(n, eksper(rolldice(1), rolldice(2)))
 mean(varom)</code></pre>
-<pre><code>## [1] 0.507</code></pre>
+<pre><code>## [1] 0.5133</code></pre>
 </div>
 
 
