@@ -1,13 +1,8 @@
 ---
 title: "Kauliukai"
 author: "Linas Syvis"
-date: '2016 m kovas 1 d '
 output: html_document
 ---
-
-
-Kauliukai
-====================================
 
 Salyga:
 
