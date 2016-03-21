@@ -1,0 +1,76 @@
+---
+title: "Task 5"
+author: "Linas Šyvis"
+output: html_document
+---
+
+* **Pinigų paklausa**
+
+**Sąlyga:**
+
+Šioje užduotyje reikia atlikti tiesinę regresiją. Pakete dynlm yra duomenų masyvas M1Germany - ten yra ir jo aprašymas. Iš turimų duomenų sudarykite ir įvertinkite tiesinę regresiją, kurios endogeninis kintamasis yra logm1. Lygtis būtų naudojama prognozuoti pinigų kiekį artimiausiam laikotarpiui į prieki remiantis dabartine situacija. Taigi prognozės sudarymui lygtis gali naudoti tik tuos duomenis, kurie būtų žinomi prognozavimo momentu.
+
+Sprendimas
+====================================
+
+
+
+```{r, message = FALSE}
+library(dynlm)
+```
+
+```{r,echo = FALSE}
+plot(M1Germany)
+```
+  
+Iš grafikų matome, kad išskirčių nėra.
+
+```{r}
+pirmas <- dynlm(logm1 ~ L(logprice, 4) + d(L(loggnp, 2)) + L(interest, 2), data = M1Germany, start = c(1960, 1), end = c(1996, 3))
+antras <- dynlm(logm1 ~ L(logprice, 2) + d(L(loggnp, 2)) + L(interest, 3), data = M1Germany, start = c(1960, 1), end = c(1996, 3))
+trecias <- dynlm(logm1 ~ L(logprice, 3) + (d(L(loggnp, 1))) + L(interest, 2), data = M1Germany, start = c(1960, 1), end = c(1996, 3))
+ketvirtas <- dynlm(logm1 ~ L(logprice, 1) + d(L(loggnp, 4)) + L(interest, 2), data = M1Germany, start = c(1960, 1), end = c(1996, 3))
+penktas <- dynlm(logm1 ~ L(logprice, 2) + (d(L(loggnp, 3))) + L(interest, 4), data = M1Germany, start = c(1960, 1), end = c(1996, 3))
+
+```
+Sukuriame modelius.
+
+```{r}
+library(car)
+vif(pirmas)
+vif(antras)
+vif(trecias)
+vif(ketvirtas)
+vif(penktas)
+```
+Modeliuose nėra multikolinearumo problemos, nes pašalinome trendus naudodami loggnp skirtumą.
+
+
+```{r}
+summary(pirmas)
+summary(antras)
+summary(trecias)
+summary(ketvirtas)
+summary(penktas)
+```
+Modelių visi kintamieji reikšmingi.
+
+```{r}
+AIC(pirmas)
+AIC(antras)
+AIC(trecias)
+AIC(ketvirtas)
+AIC(penktas)
+```
+Pagal AKAIKE penktas modelis tiksliausias.
+
+```{r}
+hist(resid(penktas), probability = TRUE)
+lines(density(resid(penktas)), col = "red")
+
+res<-as.vector(penktas$residuals)
+shapiro.test(res)
+```
+Modelio liekanos išsidesciusios pagal normalųjį skirstinį (p-value > 0.05). Tai tik papildoma salyga pasitikrinti, ar musu modelis "geras".
+
+* **Išvada:** remiantis darbo rezultatais, galime teigti, kad iš penkių sudarytų modelių penktasis modelis yra tiksliausias.
