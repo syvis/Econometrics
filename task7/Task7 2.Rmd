@@ -1,0 +1,95 @@
+---
+title: "Task 7"
+author: "Linas Šyvis"
+output: html_document
+---
+
+#2.
+
+#Sąlyga:
+For each of the same series (bricksq, ibmclose, hsales):
+
+(a) Use either the naive or seasonal naive forecasting method and apply it to the full data set.
+
+(b) Compute the residuals and plot their ACF. Do the residuals appear to be white noise? What did your forecasting method miss?
+
+(c) Do a Ljung-Box test on the residuals. What do the results mean?
+
+Programos kodas
+===========================
+
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
+```{r, message = FALSE, warning = FALSE}
+library(fpp)
+```
+
+**(a) Use either the naive or seasonal naive forecasting method and apply it to the full data set.**
+
+Išbrėžiame bricksq duomenų grafikus:
+```{r, echo = FALSE}
+par(mfrow = c(2,1))
+plot(rwf(bricksq, h=20))
+plot(snaive(bricksq, h=20))
+```
+
+Iš dviejų grafikų galime teigti, kad seasonal naive metodas tinka labiau, nes jo grafike išlaikomas sezoniškumas.
+
+Išbrėžiame ibmclose duomenų grafikus:
+```{r, echo = FALSE}
+par(mfrow = c(2,1))
+plot(rwf(ibmclose, h=30))
+plot(snaive(ibmclose, h=30))
+```
+
+Šiems duomenims nėra prasmės naudoti seasonal naive metodo, nes sezoniškumo nėra. Todėl geriau naudoti naive (Random walk) metodą.
+
+Išbrėžiame hsales duomenų grafikus:
+
+```{r, echo = FALSE}
+par(mfrow = c(2,1))
+plot(rwf(hsales))
+plot(snaive(hsales))
+```
+
+Iš dviejų grafikų galime teigti, kad seasonal naive metodas tinka labiau, nes jo grafike išlaikomas sezoniškumas.
+
+**(b) Compute the residuals and plot their ACF. Do the residuals appear to be white noise? What did your forecasting method miss?**
+
+```{r, echo = FALSE}
+resbricks <- residuals(snaive(bricksq, h=20))#išsaugome liekanas
+Acf(resbricks)
+```
+
+ACF rodo reikšmingą autokoreliaciją 1, 2, 3, 5, 6... laguose (kur stulpeliai kerta mėlyną puktyrinę liniją). Taip pat aiškiai matomas sezoniškumas. Dėl šių priežąsčių negalime teigti, kad liekanos yra baltasis triukšmas. Prognozei patobulinti būtų galima pridėti trendą.
+
+```{r, echo = FALSE}
+resibm <- residuals(rwf(ibmclose, h=30))#išsaugome liekanas
+Acf(resibm)
+```
+
+Matome, kad tik trys stulpeliai rodo reikšmingą autokoreliaciją, taip pat sunku pastebėti kokį nors pattern'ą, tikėtina, kad yra ciklo pėdsakai, todėl galime daryti hipotezę, kad duomenys nėra baltasis triukšmas. Šių duomenų prognozę sunku būtų pagerinti, nebent pridėti šiokią tokią cikliškumo įtaką.
+
+```{r, echo = FALSE}
+reshsales <- residuals(snaive(hsales))#išsaugome liekanas
+Acf(reshsales)
+```
+
+ACF rodo reikšmingą autokoreliaciją daugelyje lagų (kur stulpeliai kerta mėlyną puktyrinę liniją). Taip pat aiškiai matomas sezoniškumas. Dėl šių priežąsčių negalime teigti, kad liekanos yra baltasis triukšmas. Duomenų prognozę būtų galima pagerinti, jei pridėtume cikliškumą, nes iš duomenų matyti galimi ciklai kas 10 metų.
+
+**(c) Do a Ljung-Box test on the residuals. What do the results mean?**
+
+* Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
+```{r, echo = FALSE}
+Box.test(resbricks, fitdf=0, type="Lj")
+```
+p-value < 0.05, atmetame H0, vadinasi negalime teigti, kad liekanos yra baltasis triukšmas. Ljung-Box testas patvirtina mūsų spėjimą.
+
+```{r, echo = FALSE}
+Box.test(resibm, fitdf=0, type="Lj")
+```
+p-value > 0.05, priimame H0, vadinasi galime teigti, kad liekanos yra baltasis triukšmas. Matome, kad Ljung-Box testas paneigė mūsų hipotezę (b) dalyje.
+
+```{r, echo = FALSE}
+Box.test(reshsales, fitdf=0, type="Lj")
+```
+p-value < 0.05, atmetame H0, vadinasi negalime teigti, kad liekanos yra baltasis triukšmas. Ljung-Box testas patvirtina mūsų spėjimą.
