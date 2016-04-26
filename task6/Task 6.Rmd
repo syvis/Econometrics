@@ -5,6 +5,7 @@ output: html_document
 ---
 
 #Sąlyga:
+
 For each of the following series, make a graph of the data with forecasts
 using the most appropriate of the four benchmark methods:
 mean, naive, seasonal naive or drift.
