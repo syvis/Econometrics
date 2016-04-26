@@ -23,6 +23,9 @@ Which model gives the best RMSE?
 
 Do the residuals from the best model look like white noise?
 
+Programos kodas
+===========================
+
 ```{r, message=FALSE, warning=FALSE}
 library(fpp)
 data <- eggs

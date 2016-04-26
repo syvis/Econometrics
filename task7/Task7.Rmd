@@ -39,3 +39,196 @@ tsdisplay(ibmclose, plot.type="scatter")
 ```
   
 Iš pirmojo grafiko galime teigti, kad sezoniškumo duomenyse nėra, aiškaus trendo irgi. Galimi ciklai - 0-50, 50-270, 270-400.
+
+
+#2.
+
+#Sąlyga:
+For each of the same series (bricksq, ibmclose, hsales):
+
+(a) Use either the naive or seasonal naive forecasting method and apply it to the full data set.
+
+(b) Compute the residuals and plot their ACF. Do the residuals appear to be white noise? What did your forecasting method miss?
+
+(c) Do a Ljung-Box test on the residuals. What do the results mean?
+
+Programos kodas
+===========================
+
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
+```{r, message = FALSE, warning = FALSE}
+library(fpp)
+```
+
+**(a) Use either the naive or seasonal naive forecasting method and apply it to the full data set.**
+
+Išbrėžiame bricksq duomenų grafikus:
+```{r, echo = FALSE}
+par(mfrow = c(2,1))
+plot(rwf(bricksq, h=20))
+plot(snaive(bricksq, h=20))
+```
+
+Iš dviejų grafikų galime teigti, kad seasonal naive metodas tinka labiau, nes jo grafike išlaikomas sezoniškumas.
+
+Išbrėžiame ibmclose duomenų grafikus:
+```{r, echo = FALSE}
+par(mfrow = c(2,1))
+plot(rwf(ibmclose, h=30))
+plot(snaive(ibmclose, h=30))
+```
+
+Šiems duomenims nėra prasmės naudoti seasonal naive metodo, nes sezoniškumo nėra. Todėl geriau naudoti naive (Random walk) metodą.
+
+Išbrėžiame hsales duomenų grafikus:
+
+```{r, echo = FALSE}
+par(mfrow = c(2,1))
+plot(rwf(hsales))
+plot(snaive(hsales))
+```
+
+Iš dviejų grafikų galime teigti, kad seasonal naive metodas tinka labiau, nes jo grafike išlaikomas sezoniškumas.
+
+**(b) Compute the residuals and plot their ACF. Do the residuals appear to be white noise? What did your forecasting method miss?**
+
+```{r, echo = FALSE}
+resbricks <- residuals(snaive(bricksq, h=20))#išsaugome liekanas
+Acf(resbricks)
+```
+
+ACF rodo reikšmingą autokoreliaciją 1, 2, 3, 5, 6... laguose (kur stulpeliai kerta mėlyną puktyrinę liniją). Taip pat aiškiai matomas sezoniškumas. Dėl šių priežąsčių negalime teigti, kad liekanos yra baltasis triukšmas. Prognozei patobulinti būtų galima pridėti trendą.
+
+```{r, echo = FALSE}
+resibm <- residuals(rwf(ibmclose, h=30))#išsaugome liekanas
+Acf(resibm)
+```
+
+Matome, kad tik trys stulpeliai rodo reikšmingą autokoreliaciją, taip pat sunku pastebėti kokį nors pattern'ą, tikėtina, kad yra ciklo pėdsakai, todėl galime daryti hipotezę, kad duomenys nėra baltasis triukšmas. Šių duomenų prognozę sunku būtų pagerinti, nebent pridėti šiokią tokią cikliškumo įtaką.
+
+```{r, echo = FALSE}
+reshsales <- residuals(snaive(hsales))#išsaugome liekanas
+Acf(reshsales)
+```
+
+ACF rodo reikšmingą autokoreliaciją daugelyje lagų (kur stulpeliai kerta mėlyną puktyrinę liniją). Taip pat aiškiai matomas sezoniškumas. Dėl šių priežąsčių negalime teigti, kad liekanos yra baltasis triukšmas. Duomenų prognozę būtų galima pagerinti, jei pridėtume cikliškumą, nes iš duomenų matyti galimi ciklai kas 10 metų.
+
+**(c) Do a Ljung-Box test on the residuals. What do the results mean?**
+
+* Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
+```{r, echo = FALSE}
+Box.test(resbricks, fitdf=0, type="Lj")
+```
+p-value < 0.05, atmetame H0, vadinasi negalime teigti, kad liekanos yra baltasis triukšmas. Ljung-Box testas patvirtina mūsų spėjimą.
+
+```{r, echo = FALSE}
+Box.test(resibm, fitdf=0, type="Lj")
+```
+p-value > 0.05, priimame H0, vadinasi galime teigti, kad liekanos yra baltasis triukšmas. Matome, kad Ljung-Box testas paneigė mūsų hipotezę (b) dalyje.
+
+```{r, echo = FALSE}
+Box.test(reshsales, fitdf=0, type="Lj")
+```
+p-value < 0.05, atmetame H0, vadinasi negalime teigti, kad liekanos yra baltasis triukšmas. Ljung-Box testas patvirtina mūsų spėjimą.
+
+
+#4.
+
+#Sąlyga:
+Consider the daily closing IBM stock prices (data set ibmclose).
+
+(a) Produce some plots of the data in order to become familiar
+with it.
+
+(b) Split the data into a training set of 300 observations and a test
+set of 69 observations.
+
+(c) Try various benchmark methods to forecast the training set and
+compare the results on the test set. Which method did best?
+
+(d) For the best method, compute the residuals and plot them.
+What do the plots tell you?
+
+(e) Can you invent a better forecasting method than any of the
+benchmark methods for these data?
+
+Programos kodas
+===========================
+
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
+```{r, message = FALSE, warning = FALSE}
+library(fpp)
+```
+
+**(a) Produce some plots of the data in order to become familiar with it.**
+```{r,echo=FALSE}
+tsdisplay(ibmclose, plot.type="scatter")
+```
+
+Iš duomenų grafikų matome, kad sezoniškumo duomenyse nėra, aiškaus trendo irgi. Egzistuoja stacionarumas, nes ACF grafikas tolydžiai leidžiasi. Galimi ciklai - 0-50, 50-270, 270-400.
+
+**(b) Split the data into a training set of 300 observations and a test set of 69 observations.**
+```{r}
+ibm1 <- window(ibmclose, end = 300)
+ibm2 <- window(ibmclose, start = 301)
+```
+Padaliname duomenis į dvi dalis (kaip prašo sąlygos (b) dalis).
+
+**(c) Try various benchmark methods to forecast the training set and compare the results on the test set. Which method did best?**
+```{r}
+f1 <- meanf(ibm1, h=20)#mean metodas
+accuracy(f1, ibm2)
+
+f2 <- rwf(ibm1, h=20)#naive metodas
+accuracy(f2, ibm2)
+
+f3 <- snaive(ibm1, h=20)#seasonal naive metodas
+accuracy(f3, ibm2)
+
+f4 <- rwf(ibm1, h=20, drift=TRUE)#drift metodas
+accuracy(f4, ibm2)
+```
+
+Pastebime, kad seasonal naive ir naive prognozių training set ir test set rodmenys poromis sutampa. Deja, nerandame nei vieno modelio, kuris gan tiksliai prognozuotų, nes visų keturių Training set ir Test set reikšmės ganėtinai nemažai skiriasi ir negalime daryti prielaidos, kad kuris nors yra geresnis už kitus.
+
+```{r,echo=FALSE,warning=FALSE}
+plot(ibmclose) 
+
+lines(meanf(ibm1,h=100)$mean,col=3)
+lines(rwf(ibm1,h=100)$mean,col=4,lwd="4")
+lines(rwf(ibm1,drift=TRUE,h=100)$mean,col=5)
+lines(snaive(ibm1, h=100)$mean,col=15)
+legend("topleft",lty=1,col=c(3,4,5,15),legend=c("Mean","Naive","Drift","Seasonal naive"))
+```
+
+Iš grafiko aiškiai matome, kad nei viena prognozė iš tikrųjų nėra pakankamai tiksli tikriesems duomenims. Galime teigti, kad tiksliausiai prognozuoja Drift metodas, nes jo prognozė (nors ir paveikta staigaus kritimo praeityje) yra arčiausiai tikrųjų reikšmių.
+
+**(d) For the best method, compute the residuals and plot them. What do the plots tell you?**
+
+```{r,echo=FALSE}
+plot(f4$res)
+```
+
+Iš grafiko matome, kad liekanos nėra išsidėsčiusios ties nuliu, yra nemažų reikšmių, dėl nelabai tikslios prognozės.
+
+```{r,echo=FALSE}
+hist(f4$res, breaks="FD")
+```
+
+Histograma primena normalųjį skirstinį, reikšmės labiausiai išsidėsčiusios ties 0. Tai mūsų prognozės metodo viena teigiama savybė.
+
+```{r,echo=FALSE}
+Acf(f4$res)
+```
+
+Yra reikšmingą autokoreliaciją liudijančių duomenų (1, 6, 17 lagai).
+
+* Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
+```{r,echo=FALSE}
+Box.test(f4$res, fitdf=0, type="Lj")
+```
+p-value < 0.05, atmetame H0, vadinasi negalime teigti, kad liekanos yra baltasis triukšmas.
+
+**(e) Can you invent a better forecasting method than any of the benchmark methods for these data?**
+
+Žinoma, kad galima sugalvoti geresnį prognozavimo metodą, nes užduotyje naudoti metodai tėra tik patys paprasčiausi. Galbūt būtų galima pasitelkti eksponentinį glodinimą, kurio prognozės labiau atitiktų duomenų 301-369 reikšmes.
