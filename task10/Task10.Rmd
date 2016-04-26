@@ -4,7 +4,7 @@ author: "Linas Šyvis"
 output: html_document
 ---
 
-#1
+#1.
 
 **Sąlyga:**
 
@@ -76,7 +76,7 @@ p-value > 0.05, priimame H0, vadinasi galime teigti, kad liekanos yra baltasis t
 * Išvada: pasirinkome prognozę "įjungus" ir damped, ir exponential su parametrais $\alpha = 0.8$ ir $\beta = 0.001$.
 
 
-#2
+#2.
 
 **Sąlyga:**
 

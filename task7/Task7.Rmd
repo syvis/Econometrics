@@ -6,7 +6,8 @@ output: html_document
 
 #1.
 
-#Sąlyga:
+**Sąlyga:**
+
 The function tsdisplay(data, plot.type="scatter") is useful for showing a time plot, ACF plot and lagged scatterplot on the same graph. Use it to produce plots of the following time series:
 bricksq, hsales, ibmclose
 Can you spot the effects of seasonality, cyclicity and trend?
@@ -43,7 +44,8 @@ Iš pirmojo grafiko galime teigti, kad sezoniškumo duomenyse nėra, aiškaus tr
 
 #2.
 
-#Sąlyga:
+**Sąlyga:**
+
 For each of the same series (bricksq, ibmclose, hsales):
 
 (a) Use either the naive or seasonal naive forecasting method and apply it to the full data set.
@@ -104,7 +106,7 @@ resibm <- residuals(rwf(ibmclose, h=30))#išsaugome liekanas
 Acf(resibm)
 ```
 
-Matome, kad tik trys stulpeliai rodo reikšmingą autokoreliaciją, taip pat sunku pastebėti kokį nors pattern'ą, tikėtina, kad yra ciklo pėdsakai, todėl galime daryti hipotezę, kad duomenys nėra baltasis triukšmas. Šių duomenų prognozę sunku būtų pagerinti, nebent pridėti šiokią tokią cikliškumo įtaką.
+Matome, kad tik trys stulpeliai rodo reikšmingą autokoreliaciją, todėl galime daryti prielaidą, kad liekanos yra dalinis baltasis triukšmas. Šių duomenų prognozę sunku būtų pagerinti, nebent pridėti šiokią tokią cikliškumo įtaką.
 
 ```{r, echo = FALSE}
 reshsales <- residuals(snaive(hsales))#išsaugome liekanas
@@ -124,7 +126,7 @@ p-value < 0.05, atmetame H0, vadinasi negalime teigti, kad liekanos yra baltasis
 ```{r, echo = FALSE}
 Box.test(resibm, fitdf=0, type="Lj")
 ```
-p-value > 0.05, priimame H0, vadinasi galime teigti, kad liekanos yra baltasis triukšmas. Matome, kad Ljung-Box testas paneigė mūsų hipotezę (b) dalyje.
+p-value > 0.05, priimame H0, vadinasi galime teigti, kad liekanos yra baltasis triukšmas.
 
 ```{r, echo = FALSE}
 Box.test(reshsales, fitdf=0, type="Lj")
@@ -134,7 +136,8 @@ p-value < 0.05, atmetame H0, vadinasi negalime teigti, kad liekanos yra baltasis
 
 #4.
 
-#Sąlyga:
+**Sąlyga:**
+
 Consider the daily closing IBM stock prices (data set ibmclose).
 
 (a) Produce some plots of the data in order to become familiar
@@ -165,7 +168,7 @@ library(fpp)
 tsdisplay(ibmclose, plot.type="scatter")
 ```
 
-Iš duomenų grafikų matome, kad sezoniškumo duomenyse nėra, aiškaus trendo irgi. Egzistuoja stacionarumas, nes ACF grafikas tolydžiai leidžiasi. Galimi ciklai - 0-50, 50-270, 270-400.
+Iš duomenų grafikų matome, kad sezoniškumo duomenyse nėra, aiškaus trendo irgi. Galimi ciklai - 0-50, 50-270, 270-400.
 
 **(b) Split the data into a training set of 300 observations and a test set of 69 observations.**
 ```{r}
@@ -209,16 +212,16 @@ Iš grafiko aiškiai matome, kad nei viena prognozė iš tikrųjų nėra pakanka
 plot(f4$res)
 ```
 
-Iš grafiko matome, kad liekanos nėra išsidėsčiusios ties nuliu, yra nemažų reikšmių, dėl nelabai tikslios prognozės.
+Iš grafiko matome, kad liekanos nėra išsidėsčiusios ties nuliu, yra nemažų reikšmių, dėl nelabai tikslios prognozės. Egzistuoja galimas stacionarumas.
 
 ```{r,echo=FALSE}
-hist(f4$res, breaks="FD")
+hist(f4$res, breaks="FD", main = "Liekanų sklaidos histograma")
 ```
 
-Histograma primena normalųjį skirstinį, reikšmės labiausiai išsidėsčiusios ties 0. Tai mūsų prognozės metodo viena teigiama savybė.
+Histograma primena normalųjį skirstinį, reikšmės labiausiai išsidėsčiusios ties 0.
 
 ```{r,echo=FALSE}
-Acf(f4$res)
+Acf(f4$res, main = "")
 ```
 
 Yra reikšmingą autokoreliaciją liudijančių duomenų (1, 6, 17 lagai).

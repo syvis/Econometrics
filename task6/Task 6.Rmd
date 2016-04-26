@@ -4,7 +4,7 @@ author: "Linas Šyvis"
 output: html_document
 ---
 
-#Sąlyga:
+**Sąlyga:**
 
 For each of the following series, make a graph of the data with forecasts
 using the most appropriate of the four benchmark methods:
