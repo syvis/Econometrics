@@ -1,0 +1,153 @@
+---
+title: "Task13"
+author: "Linas Šyvis"
+output: html_document
+---
+
+#1. 
+
+**Sąlyga:**
+
+For the following series, find an appropriate Box-Cox transformation
+and order of differencing in order to obtain stationary data.
+
+(a) usnetelec
+
+(b) usgdp
+
+(c) mcopper
+
+(d) enplanements
+
+(e) visitors
+
+Programos kodas
+===========================
+
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
+```{r, message=FALSE, warning=FALSE}
+library(fpp)
+```
+
+Išbrėžkime pradinių duomenų (juoda) ir duomenų po transformacijos ir diferencijavimo (raudona) grafikus:
+
+**(a) usnetelec**
+```{r}
+lambda1 <- BoxCox.lambda(usnetelec)#randame Box-Cox transformacijos parametrą lambda
+plot(usnetelec)
+n1 <- ndiffs(usnetelec)
+plot(diff(BoxCox(usnetelec, lambda=lambda1), diff = n1), col = "red")
+```
+
+Funkcija ndiffs pasiūlo, kiek kartų duomenis būtų geriausia diferencijuoti.
+Išbrėžus duomenis po transformacijos ir pirmos eilės diferencijavimo pastebime, kad galimai nėra stacionarumo. Patikrinkime šį spėjimą su KPSS testu su nuline hipoteze, kad duomenys yra stacionarūs su alternatyva, kad nėra.
+
+```{r}
+kpss.test(diff(BoxCox(usnetelec,lambda=lambda1), diff = n1))
+```
+p-value < 0.05, H0 atmetam, remiantis KPSS testu, iš tikrųjų, duomenys nėra stacionarūs.
+
+Diferencijuokime duomenis dukart, galbūt tada atsiras stacionarumas:
+```{r, warning=F}
+plot(diff(BoxCox(usnetelec, lambda=lambda1), diff = 2), col = "red")
+kpss.test(diff(BoxCox(usnetelec,lambda=lambda1), diff = 2))
+```
+
+Iš grafiko matome, kad duomenys tapo panašesni į stacionarius, o atliktas testas patvirtina (p-value > 0.05) mūsų spėjimą.
+
+**(b) usgdp**
+```{r, warning=F}
+lambda2 <- BoxCox.lambda(usgdp)#randame Box-Cox transformacijos parametrą lambda
+n2 <- ndiffs(usgdp)
+plot(usgdp)
+plot(diff(BoxCox(usgdp,lambda=lambda2), diff = n2), col = "red")
+kpss.test(diff(BoxCox(usgdp,lambda=lambda2), diff = n2))
+```
+
+Išbrėžus grafiką po transformacijos ir po funkcijos ndiffs pasiūlyto antros eilės diferencijavimo, gauname stacionarius duomenis.
+
+**(c) mcopper**
+```{r, warning=F}
+lambda3 <- BoxCox.lambda(mcopper)#randame Box-Cox transformacijos parametrą lambda
+n3 <- ndiffs(mcopper)
+plot(mcopper)
+plot(diff(BoxCox(mcopper,lambda=lambda3), diff = n3), col = "red")
+kpss.test(diff(BoxCox(mcopper,lambda=lambda3), diff = n3))
+```
+
+Išbrėžus grafiką po transformacijos ir po funkcijos ndiffs pasiūlyto pirmos eilės diferencijavimo, gauname stacionarius duomenis.
+
+**(d) enplanements**
+```{r, warning=F}
+lambda4 <- BoxCox.lambda(enplanements)#randame Box-Cox transformacijos parametrą lambda
+n4 <- nsdiffs(enplanements)
+plot(enplanements)
+plot(diff(BoxCox(enplanements,lambda=lambda4), diff = n4), col = "red")
+kpss.test(diff(BoxCox(enplanements,lambda=lambda4), diff = n4))
+```
+
+Šįkart naudosime funkciją nsdiffs, nes duomenyse yra sezoniškumas.
+Išbrėžus grafiką po transformacijos ir po funkcijos nsdiffs pasiūlyto pirmos eilės diferencijavimo, gauname stacionarius duomenis.
+
+**(e) visitors**
+```{r, warning=F}
+lambda5 <- BoxCox.lambda(visitors)#randame Box-Cox transformacijos parametrą lambda
+n5 <- nsdiffs(visitors)
+plot(visitors)
+plot(diff(BoxCox(visitors,lambda=lambda5), diff = n5), col = "red")
+kpss.test(diff(BoxCox(visitors,lambda=lambda5), diff = n5))
+```
+
+Išbrėžus grafiką po transformacijos ir po funkcijos nsdiffs pasiūlyto pirmos eilės diferencijavimo, gauname stacionarius duomenis.
+
+
+* Išvada: Box-Cox transformacija ir diferencijavimas duomenis padaro stacionariais. Grafike stebimi duomenų pokyčiai, o ne reikšmių išsidėstymas laike.
+
+
+#2.
+
+**Sąlyga:**
+
+Why is a Box-Cox transformation unhelpful for the cangas data?
+
+Programos kodas
+===========================
+
+Išbrėžkime pradinių duomenų (juoda) ir duomenų po transformacijos (raudona) grafikus:
+```{r}
+lambda6 <- BoxCox.lambda(cangas)#randame Box-Cox transformacijos parametrą lambda
+plot(cangas)
+plot(BoxCox(cangas,lambda=lambda6), col = "red")
+```
+
+Box-Cox transformacija šiuo atveju nėra naudinga, nes pradiniai duomenys pradžioje ir pabaigoje svyruoja mažai, o per vidurį svyravimai yra didžiausi. Tokiu atveju Box-Cox transformacija išlygina svyravimus tik pradžioje ir pabaigoje, o viduryje jie vis tiek išlieka dideli.
+
+#3.
+
+**Sąlyga:**
+
+Download the data at http://robjhyndman.com/data/retail.xls.
+Choose one of the series and find an appropriate Box-Cox transformation
+and order of differencing in order to obtain stationary data.
+
+Programos kodas
+===========================
+
+Nuskaitome duomenis.
+```{r}
+data = read.csv2("retail.csv", header = TRUE)
+duomenys <- data[,2]#naudosime tik vieną duomenų stulpelį
+duom <- ts(duomenys, frequency=12, start=c(1982,4))#išsaugome duomenis kaip laiko eilutę
+```
+
+```{r, warning=F}
+lambda7 <- BoxCox.lambda(duom)#randame Box-Cox transformacijos parametrą lambda
+n7 <- nsdiffs(duom)
+plot(duom)
+plot(diff(BoxCox(duom,lambda = lambda7), diff = n7), col = "red")
+kpss.test(diff(BoxCox(duom,lambda=lambda7), diff = n7))
+```
+
+Išbrėžus grafiką po transformacijos ir po funkcijos nsdiffs pasiūlyto pirmos eilės diferencijavimo, gauname stacionarius duomenis.
+
+* Išvada: Box-Cox transformacija ir diferencijavimas duomenis padaro stacionariais. Grafike stebimi duomenų pokyčiai, o ne reikšmių išsidėstymas laike.

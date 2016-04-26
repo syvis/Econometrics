@@ -1,0 +1,84 @@
+---
+title: "Task10"
+author: "Linas Šyvis"
+output: html_document
+---
+
+**Sąlyga:**
+For this exercise, use the monthly Australian short-term overseas visitors data, May 1985–April 2005. (Data set: visitors.)
+
+(a) Make a time plot of your data and describe the main features of the series.
+
+(b) Forecast the next two years using Holt-Winters’ multiplicative method.
+
+(c) Why is multiplicative seasonality necessary here?
+
+(d) Experiment with making the trend exponential and/or damped.
+
+(e) Compare the RMSE of the one-step forecasts from the various methods. Which do you prefer?
+
+(f) Check that the residuals from the best model look like white noise.
+
+Programos kodas
+===========================
+
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
+```{r, message=FALSE, warning=FALSE}
+library(fpp)
+data <- visitors
+```
+
+
+**(a) Make a time plot of your data and describe the main features of the series.**
+```{r}
+tsdisplay(data, plot.type="scatter")
+```
+
+Iš pirmojo ir antrojo grafikų pastebime, kad egzistuoja sezoniškumas (periodiški kasmetiniai pakilimai ir nuosmūkiai). Iš paskutiniojo grafiko matome, kad egzistuoja stipri tiesinė priklausomybė tarp kintamojo ir jo pirmojo vėlinio.
+
+**(b) Forecast the next two years using Holt-Winters’ multiplicative method.**
+```{r}
+fit <- hw(data, seasonal="mult", h = 24)
+plot(fit)
+```
+
+**(c) Why is multiplicative seasonality necessary here?**
+
+Multiplikatyvus sezoniškumas reikalingas, nes duomenų sezoniškumo svyravymai laikui bėgant vis didėja. Esant procentiniam pokyčiui, kai reikšmės didėja, didėja ir svyravimai.
+
+**(d) Experiment with making the trend exponential and/or damped.**
+```{r}
+fit1 <- hw(data, seasonal="mult", h = 24, damped = TRUE)
+plot(fit1)
+```
+
+Padarius damped pagrindu pagrįstą prognozę, matome, kad išnyksta trendas, duomenys nebekyla, tik išlieka sezoniškumas.
+Padarius eksponentiniu glodinimu pagrįstą prognozę, nepastebime jokių pokyčių, todėl jos grafikai (exponential = TRUE, damped = FALSE ir exponential = TRUE, damped = TRUE) neįtraukti.
+
+**(e) Compare the RMSE of the one-step forecasts from the various methods. Which do you prefer?**
+```{r}
+fit1 <- hw(data, seasonal="mult", h = 24)
+fit2 <- hw(data, seasonal="mult", h = 24, damped = TRUE)
+fit3 <- hw(data, seasonal="mult", h = 24, damped = TRUE, exponential = TRUE)
+fit4 <- hw(data, seasonal="mult", h = 24, exponential = TRUE)
+accuracy(fit1)
+accuracy(fit2)
+accuracy(fit3)
+accuracy(fit4)
+```
+RMSE atžvilgiu damped pagrindu pagrįsta prognozė yra geriausia, nes paklaida mažiausia.
+
+**(f) Check that the residuals from the best model look like white noise.**
+```{r}
+Acf(fit2$res, main = "")
+```
+
+Iš grafiko galime pastebėti, kad tik trys vietos rodo reikšmingą autokoreliaciją. Todėl galime kelti hipotezę, kad liekanos yra baltasis triukšmas.
+
+Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
+```{r}
+Box.test(fit2$res)
+```
+p-value > 0.05, priimame H0, vadinasi galime teigti, kad liekanos yra baltasis triukšmas.
+
+* Išvada: išsirinkome damped pagrindu pagrįstą prognozę, galime teigti, kad ji yra gana tiksli, nes rezultatai rodo, kad liekanos yra baltasis triukšmas.
