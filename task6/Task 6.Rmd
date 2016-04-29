@@ -4,6 +4,13 @@ author: "Linas Šyvis"
 output: html_document
 ---
 
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
+```{r, message = FALSE, warning = FALSE}
+library(fpp)
+```
+
+#2
+
 **Sąlyga:**
 
 For each of the following series, make a graph of the data with forecasts
@@ -13,16 +20,10 @@ mean, naive, seasonal naive or drift.
 Programos kodas
 ===========================
 
-Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
-```{r, message = FALSE, warning = FALSE}
-library(fpp)
-```
-
 **(a) Annual bituminous coal production (1920–1968). Data set bicoal.** Išbrėžkime duomenų grafiką.
 ```{r}
-adata <- bicoal
 par(mfrow = c(1,1))
-plot(adata)
+plot(bicoal)
 ```
   
 Iš grafiko negalime matyti aiškių tendencijų ar periodiškumo.
@@ -30,39 +31,37 @@ Iš grafiko negalime matyti aiškių tendencijų ar periodiškumo.
 Išbrėžkime duomenų prognozes visais keturiais sąlygoje siūlomais būdais:
 ```{r}
 par(mfrow = c(2,2))
-plot(meanf(adata, h = 20))
-plot(rwf(adata, h=20))
-plot(snaive(adata, h=20))
-plot(rwf(adata, drift=TRUE, h=20))
+plot(meanf(bicoal, h = 20))
+plot(rwf(bicoal, h=20))
+plot(snaive(bicoal, h=20))
+plot(rwf(bicoal, drift=TRUE, h=20))
 ```
   
-Galime teigti, kad paskutinysis grafikas (Forecasts form Random walk with drift) prognozuoja tiksliausiai, nes jo prognozės pasikliovimo intervalas yra siauriausias (lygus su kitais dviem grafikais), o prognozuojamos reikšmės netgi turi nuokrypį (kituose grafikuose tiesės einančios lygiagrečiai x ašies).
+Manau, kad paskutinysis grafikas (Forecasts form Random walk with drift) prognozuoja tiksliausiai, nes jo prognozuojamos reikšmės turi šiokį tokį nuokrypį (kituose grafikuose yra tik tiesės einančios lygiagrečiai x ašies).
 
 **(b) Price of chicken (1924–1993). Data set chicken.** Išbrėžkime duomenų grafiką.
 ```{r}
-bdata <- chicken
 par(mfrow = c(1,1))
-plot(bdata)
+plot(chicken)
 ```
   
-Iš grafiko matome aiškią žemėjančią ir vėliau išsilyginančią tendenciją, kuri primena Poisson'o skirstinį.
+Iš grafiko matome aiškią žemėjančią ir vėliau išsilyginančią tendenciją (primena Poisson'o skirstinį).
 
 Išbrėžkime duomenų prognozes visais keturiais sąlygoje siūlomais būdais:
 ```{r}
 par(mfrow = c(2,2))
-plot(meanf(bdata, h = 30))
-plot(rwf(bdata, h=30))
-plot(snaive(bdata, h=30))
-plot(rwf(bdata, drift=TRUE, h=30))
+plot(meanf(chicken, h = 30))
+plot(rwf(chicken, h=30))
+plot(snaive(chicken, h=30))
+plot(rwf(chicken, drift=TRUE, h=30))
 ```
   
-Galime teigti, kad geriausiai prognuozuoja antrasis (Forecasts from Random walk) grafikas. Iš duomenų matyti, kad reikšmės vargu, ar mažės. Pirmąjį prognozės grafiką (Forecasts from Mean) galime atmesti, nes vidurkis šiuo atveju nėra pakankamai tikslus rodiklis. Trečiasis (Forecasts from seasonal naive method) grafikas prognozuoja beveik taip pat kaip ir antrasis, tačiau jį geriau palikime aiškiai sezoniškumo paveiktiems duomenims.
+Galime teigti, kad geriausiai prognuozuoja antrasis (Forecasts from Random walk) grafikas. Iš duomenų matyti, kad reikšmės vargu, ar mažės. Pirmąjį prognozės grafiką (Forecasts from Mean) galime atmesti, nes vidurkis šiuo atveju aiškiai nėra pakankamai tikslus rodiklis. Trečiasis (Forecasts from seasonal naive method) grafikas prognozuoja beveik taip pat kaip ir antrasis, tačiau jį geriau palikime aiškiai sezoniškumo paveiktiems duomenims.
 
 **(c) Monthly total of people on unemployed benefits in Australia (January 1956–July 1992). Data set dole.** Išbrėžkime duomenų grafiką.
 ```{r}
-cdata <- dole
 par(mfrow = c(1,1))
-plot(cdata)
+plot(dole)
 ```
   
 Iš grafiko matome ryškią duomenų reikšmių kylimo tendenciją.
@@ -70,70 +69,67 @@ Iš grafiko matome ryškią duomenų reikšmių kylimo tendenciją.
 Išbrėžkime duomenų prognozes visais keturiais sąlygoje siūlomais būdais:
 ```{r}
 par(mfrow = c(2,2))
-plot(meanf(cdata, h = 60))
-plot(rwf(cdata, h=60))
-plot(snaive(cdata, h=60))
-plot(rwf(cdata, drift=TRUE, h=60))
+plot(meanf(dole, h = 60))
+plot(rwf(dole, h=60))
+plot(snaive(dole, h=60))
+plot(rwf(dole, drift=TRUE, h=60))
 ```
   
 Iškart atmeskime pirmąjį (Forecasts from Mean) grafiką, nes šiuo atveju jis nėra pakankamai tikslus mūsų duomenims prognozuoti. Šiuo atveju gali tikti visi likę grafikai, nes mūsų duomenys turi tendenciją kelis metus pakilti ir tada pradėti fluktuoti, o tada jau neaišku kaip tas flutkuavimas užsibaigs: ar bus tiesė lygiagreti x ašiai, ar bus šiokia tokia sezoniškumo įtaka, ar reikšmės kažkiek kils.
 
 **(d) Monthly total of accidental deaths in the United States (January 1973–December 1978). Data set usdeaths.** Išbrėžkime duomenų grafiką.
 ```{r}
-ddata <- usdeaths
 par(mfrow = c(1,1))
-plot(ddata)
+plot(usdeaths)
 ```
   
-Iš grafiko matome aiškią sezoniškumo įtaką, nes duomenys mėnesiniai.
+Iš grafiko matome aiškią sezoniškumo įtaką, duomenys mėnesiniai.
 
 Išbrėžkime duomenų prognozes visais keturiais sąlygoje siūlomais būdais:
 ```{r}
 par(mfrow = c(2,2))
-plot(meanf(ddata, h = 30))
-plot(rwf(ddata, h=30))
-plot(snaive(ddata, h=30))
-plot(rwf(ddata, drift=TRUE, h=30))
+plot(meanf(usdeaths, h = 30))
+plot(rwf(usdeaths, h=30))
+plot(snaive(usdeaths, h=30))
+plot(rwf(usdeaths, drift=TRUE, h=30))
 ```
   
-Šiuo atveju aiškiai matosi, kad tiksliausiai prognozuoja trečiasis (Forecasts from Seasonal naive method) grafikas (prognozuojamos reikšmės labiausiai tikėtinos).
+Šiuo atveju aiškiai matosi, kad tiksliausiai prognozuoja trečiasis (Forecasts from Seasonal naive method) grafikas (prognozuojamos reikšmės iš akies labiausiai tikėtinos, kad tokios ir bus), nes jis atsižvelgia į sezoniškumą duomenyse.
 
 **(e) Quarterly production of bricks (in millions of units) at Portland, Australia (March 1956–September 1994). Data set bricksq.** Išbrėžkime duomenų grafiką.
 ```{r}
-edata <- bricksq
 par(mfrow = c(1,1))
-plot(edata)
+plot(bricksq)
 ```
   
-Iš grafiko matome kylimą, o vėliau po truputį ryškėjantį galimą periodiškumą.
+Iš grafiko matome kylimą, o vėliau po truputį ryškėjantį galimą cikliškumą.
 
 Išbrėžkime duomenų prognozes visais keturiais sąlygoje siūlomais būdais:
 ```{r}
 par(mfrow = c(2,2))
-plot(meanf(edata, h = 30))
-plot(rwf(edata, h=30))
-plot(snaive(edata, h=30))
-plot(rwf(edata, drift=TRUE, h=30))
+plot(meanf(bricksq, h = 30))
+plot(rwf(bricksq, h=30))
+plot(snaive(bricksq, h=30))
+plot(rwf(bricksq, drift=TRUE, h=30))
 ```
   
 Mano nuomone, geriausiai prognuozuoja ketvirtasis (Forecasts from Random walk with drift) grafikas, nes remiantis praeitimi, tikėtina, kad duomenys kils (naujų mūrinių pastatų, kaip ir plytų reikės). Visgi šioje prognozėje dar galėtų būti atsižvelgta į sezoniškumą.
 
 **(f) Annual Canadian lynx trappings (1821–1934). Data set lynx.** Išbrėžkime duomenų grafiką.
 ```{r}
-fdata <- lynx
 par(mfrow = c(1,1))
-plot(fdata)
+plot(lynx)
 ```
   
-Iš duomenų matome ryškų periodiškumą (matyt lūšių prisidaugina, jas išgaudo, jų sumažėja, tada nustoja gaudyti, jos vėl prisidaugina ir t.t.)
+Iš duomenų matome ryškų cikliškumą (matyt lūšių prisidaugina, jas išgaudo, jų sumažėja, tada jas nustoja gaudyti, lūšys vėl prisidaugina ir t.t.)
 
 Išbrėžkime duomenų prognozes visais keturiais sąlygoje siūlomais būdais:
 ```{r}
 par(mfrow = c(2,2))
-plot(meanf(fdata, h = 30))
-plot(rwf(fdata, h=30))
-plot(snaive(fdata, h=30))
-plot(rwf(fdata, drift=TRUE, h=30))
+plot(meanf(lynx, h = 30))
+plot(rwf(lynx, h=30))
+plot(snaive(lynx, h=30))
+plot(rwf(lynx, drift=TRUE, h=30))
 ```
   
-Iš visų grafikų geriausiai prognozuoja antrasis (Forecasts from Random walk) ir trečiasis (Forecasts from Seasonal naive method), tačiau geriau būtų, jei patobulintume juos pridėję periodiškumą.
+Iš visų grafikų geriausiai prognozuoja antrasis (Forecasts from Random walk) ir trečiasis (Forecasts from Seasonal naive method), tačiau geriau būtų, jei patobulintume juos atsižvelgę į cikliškumą.

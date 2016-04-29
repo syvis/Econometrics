@@ -4,42 +4,42 @@ author: "Linas Šyvis"
 output: html_document
 ---
 
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyse.
+```{r, message = FALSE, warning = FALSE}
+library(fpp)
+```
+
 #1.
 
 **Sąlyga:**
 
-The function tsdisplay(data, plot.type="scatter") is useful for showing a time plot, ACF plot and lagged scatterplot on the same graph. Use it to produce plots of the following time series:
+The function tsdisplay(data, plot.type = "scatter") is useful for showing a time plot, ACF plot and lagged scatterplot on the same graph. Use it to produce plots of the following time series:
 bricksq, hsales, ibmclose
 Can you spot the effects of seasonality, cyclicity and trend?
 
 Programos kodas
 ===========================
 
-Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
-```{r, message = FALSE, warning = FALSE}
-library(fpp)
-```
-
 Išbrėžiame bricksq duomenų grafikus:
 ```{r}
 tsdisplay(bricksq, plot.type="scatter")
 ```
   
-Iš pirmojo grafiko galime pastebėti sezoniškumo požymius - maži kalniukai (kasmetiniai), taip pat matosi cikliškumas - staigūs kritimai ir ilgi kilimai. Galima teigti, kad šio grafiko bendras trendas yra kylantis.
+Iš grafikų galime pastebėti sezoniškumo požymius - maži kalniukai, taip pat pirmajame grafike matosi cikliškumas - staigūs kritimai ir ilgi kilimai. Galima teigti, kad šio grafiko bendras trendas yra kylantis.
 
 Išbrėžiame hsales duomenų grafikus:
 ```{r}
 tsdisplay(hsales, plot.type="scatter")
 ```
-  
-Iš pirmojo grafiko galime teigti, kad trendo nėra, nes visi pasikeitimai vyksta viename lygyje, tačiau aiškiai matomas sezoniškumas - kasmetiniai kilimai ir nuosmukiai. Taip pat galime pastebėti cikliškumo pėdsakus (1975-1982, 1982-1992).
+
+Galime teigti, kad trendo nėra, nes visi pasikeitimai vyksta viename lygyje, tačiau aiškiai matomas sezoniškumas - kasmetiniai kilimai ir nuosmukiai. Taip pat galime pastebėti cikliškumo pėdsakus (1975-1982, 1982-1992).
 
 Išbrėžiame ibmclose duomenų grafikus:
 ```{r}
 tsdisplay(ibmclose, plot.type="scatter")
 ```
   
-Iš pirmojo grafiko galime teigti, kad sezoniškumo duomenyse nėra, aiškaus trendo irgi. Galimi ciklai - 0-50, 50-270, 270-400.
+Galime teigti, kad sezoniškumo duomenyse nėra, aiškaus trendo irgi. Galimi ciklai - 0-50, 50-270, 270-400.
 
 
 #2.
@@ -56,11 +56,6 @@ For each of the same series (bricksq, ibmclose, hsales):
 
 Programos kodas
 ===========================
-
-Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
-```{r, message = FALSE, warning = FALSE}
-library(fpp)
-```
 
 **(a) Use either the naive or seasonal naive forecasting method and apply it to the full data set.**
 
@@ -99,7 +94,7 @@ resbricks <- residuals(snaive(bricksq, h=20))#išsaugome liekanas
 Acf(resbricks)
 ```
 
-ACF rodo reikšmingą autokoreliaciją 1, 2, 3, 5, 6... laguose (kur stulpeliai kerta mėlyną puktyrinę liniją). Taip pat aiškiai matomas sezoniškumas. Dėl šių priežąsčių negalime teigti, kad liekanos yra baltasis triukšmas. Prognozei patobulinti būtų galima pridėti trendą.
+ACF rodo reikšmingą autokoreliaciją nemažai vietų (kur stulpeliai kerta mėlyną puktyrinę liniją). Taip pat aiškiai matomas sezoniškumas. Dėl šių priežąsčių negalime teigti, kad liekanos yra baltasis triukšmas. Prognozei patobulinti būtų galima pridėti trendą.
 
 ```{r, echo = FALSE}
 resibm <- residuals(rwf(ibmclose, h=30))#išsaugome liekanas
@@ -158,11 +153,6 @@ benchmark methods for these data?
 Programos kodas
 ===========================
 
-Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
-```{r, message = FALSE, warning = FALSE}
-library(fpp)
-```
-
 **(a) Produce some plots of the data in order to become familiar with it.**
 ```{r,echo=FALSE}
 tsdisplay(ibmclose, plot.type="scatter")
@@ -192,7 +182,7 @@ f4 <- rwf(ibm1, h=20, drift=TRUE)#drift metodas
 accuracy(f4, ibm2)
 ```
 
-Pastebime, kad seasonal naive ir naive prognozių training set ir test set rodmenys poromis sutampa. Deja, nerandame nei vieno modelio, kuris gan tiksliai prognozuotų, nes visų keturių Training set ir Test set reikšmės ganėtinai nemažai skiriasi ir negalime daryti prielaidos, kad kuris nors yra geresnis už kitus.
+Pastebime, kad seasonal naive ir naive prognozių training set ir test set rodmenys poromis sutampa. Matome, kad naive ir seasonal naive metodų paklaidos yra mažiausios, todėl galime teigti, kad šiais metodais grįstos prognozės yra labiausiai tinkamos.
 
 ```{r,echo=FALSE,warning=FALSE}
 plot(ibmclose) 
@@ -204,24 +194,25 @@ lines(snaive(ibm1, h=100)$mean,col=15)
 legend("topleft",lty=1,col=c(3,4,5,15),legend=c("Mean","Naive","Drift","Seasonal naive"))
 ```
 
-Iš grafiko aiškiai matome, kad nei viena prognozė iš tikrųjų nėra pakankamai tiksli tikriesems duomenims. Galime teigti, kad tiksliausiai prognozuoja Drift metodas, nes jo prognozė (nors ir paveikta staigaus kritimo praeityje) yra arčiausiai tikrųjų reikšmių.
+Iš grafiko aiškiai matome, kad nei viena prognozė iš tikrųjų nėra pakankamai tiksli tikriesems duomenims. Galime teigti, kad tiksliausiai prognozuoja Naive ir Seasonal naive metodais grįstos prognozės, jos yra artimiausiai tikrųjų reikšmių. Mean metodas šiuo atveju nėra pakankamai tikslus, o Drift manau, kad per daug paveiktas prieš tai buvusio staigaus kritimo.
 
 **(d) For the best method, compute the residuals and plot them. What do the plots tell you?**
 
 ```{r,echo=FALSE}
-plot(f4$res)
+plot(f2$res)
+abline(0,0, col = 5)
 ```
 
-Iš grafiko matome, kad liekanos nėra išsidėsčiusios ties nuliu, yra nemažų reikšmių, dėl nelabai tikslios prognozės. Egzistuoja galimas stacionarumas.
+Iš grafiko matome, kad liekanos gan nemažai nutolusios nuo 0 (ypač pabaigoje dideli svyravimai) dėl nelabai tikslios prognozės.
 
 ```{r,echo=FALSE}
-hist(f4$res, breaks="FD", main = "Liekanų sklaidos histograma")
+hist(f2$res, breaks="FD", main = "Liekanų sklaidos histograma")
 ```
 
 Histograma primena normalųjį skirstinį, reikšmės labiausiai išsidėsčiusios ties 0.
 
 ```{r,echo=FALSE}
-Acf(f4$res, main = "")
+Acf(f2$res, main = "")
 ```
 
 Yra reikšmingą autokoreliaciją liudijančių duomenų (1, 6, 17 lagai).

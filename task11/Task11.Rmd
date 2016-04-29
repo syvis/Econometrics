@@ -4,18 +4,18 @@ author: "Linas Šyvis"
 output: html_document
 ---
 
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
+```{r, message=FALSE, warning=FALSE}
+library(fpp)
+data <- eggs
+```
+
 **Sąlyga:**
 
 Use ets() to find the best ETS model for the price of eggs (data set eggs). How does this model compare to the one you found in the previous lab session?
 
 Programos kodas
 ===========================
-
-Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
-```{r, message=FALSE, warning=FALSE}
-library(fpp)
-data <- eggs
-```
 
 Pasinaudojame ETS funkcija ir prognozuojame kiaušinių kainą.
 ```{r}
@@ -37,8 +37,8 @@ accuracy(fit2)
 
 Matome, kad antrojo modelio paklaida yra mažesnė. Tačiau skirtumas nėra didelis. Patikrinkime liekanų autokoreliaciją.
 ```{r}
-Acf(fit1$res, main = "")
-Acf(fit2$res, main = "")
+Acf(fit1$res, main = "Liekanos")
+Acf(fit2$res, main = "Liekanos")
 ```
 
 Pastebime, kad skirtumas vos ižiūrimas: abu grafikai rodo, kad liekanos tikriausiai yra baltasis triukšmas. Patikrinkime su Ljung-Box testu, kur H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
@@ -48,4 +48,4 @@ Box.test(fit2$res)
 ```
 Abiejų modelių p-value > 0.05, priimame H0, vadinasi galime teigti, kad abiejų modelių liekanos yra baltasis triukšmas.
 
-* Išvada: remiantis šiuo darbu galime teigti, kad abu modeliai prognozuoja panašiai, todėl nėra didelio skirtumo, kurį modelį pasirinksime, kaip geresnį.
+* Išvada: remiantis šiuo darbu galime teigti, kad abu modeliai prognozuoja panašiai, todėl praktiškai nėra skirtumo tarp prognozių tikslumo.

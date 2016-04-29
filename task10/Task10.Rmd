@@ -4,6 +4,11 @@ author: "Linas Šyvis"
 output: html_document
 ---
 
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyse.
+```{r, message = FALSE, warning = FALSE}
+library(fpp)
+```
+
 #1.
 
 **Sąlyga:**
@@ -26,27 +31,28 @@ Do the residuals from the best model look like white noise?
 Programos kodas
 ===========================
 
-```{r, message=FALSE, warning=FALSE}
-library(fpp)
-data <- eggs
-```
+**1)**
 
 ```{r}
-fit1 <- holt(data, h=100, damped = TRUE, alpha = 0.01, beta = 0.01)
+fit1 <- holt(eggs, h=100, damped = TRUE, alpha = 0.01, beta = 0.01)
 plot(fit1)
 ```
 
 Matome, kad "įjungus" damped, prognozėje ilgame laikotarpyje dingsta trendas. Parametras $\alpha$ glodina modelį (kuo didesnis $\alpha$, tuo mažiau triukšmo prognozėje), o parametras $\beta$ glodina parametro $\alpha$ paveiktą prognozę (gaunasi dvigubas glodinimas).
 
+**2)**
+
 ```{r}
-fit2 <- holt(data, h=100, exponential = TRUE, alpha = 0.8, beta = 0.0001, initial = "simple")
+fit2 <- holt(eggs, h=100, exponential = TRUE, alpha = 0.8, beta = 0.0001, initial = "simple")
 plot(fit2)
 ```
 
 Iš grafiko matome, kad modelis labai jautrus pradiniams duomenims, dėl galimo jų netikslumo išsikraipo ir visa prognozė. 
 
+**3)**
+
 ```{r}
-fit3 <- holt(data, h=100, damped = TRUE, exponential = TRUE, alpha = 0.8, beta = 0.001)
+fit3 <- holt(eggs, h=100, damped = TRUE, exponential = TRUE, alpha = 0.8, beta = 0.001)
 plot(fit3)
 ```
 
@@ -62,10 +68,10 @@ Matome, kad trečiojo modelio RMSE (vidutinis prognozuojamų reikšmių nuokrypi
 
 Patikrinkime, ar geriausiojo modelio liekanos yra baltasis triukšmas:
 ```{r}
-Acf(fit3$res, main = "")
+Acf(fit3$res, main = "Liekanos")
 ```
 
-Iš grafiko matome, kad tik 14 lag'as rodo reikšmingą autokoreliaciją (kerta mėlyną punktyrinę liniją), todėl keliame hipotezę, kad liekanos yra baltasis triukšmas.
+Iš grafiko matome, kad tik vienoje vietoje egzistuoja reikšminga autokoreliacija (kerta mėlyną punktyrinę liniją), todėl keliame hipotezę, kad liekanos yra baltasis triukšmas.
 
 Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
 ```{r}
@@ -97,23 +103,16 @@ For this exercise, use the monthly Australian short-term overseas visitors data,
 Programos kodas
 ===========================
 
-Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
-```{r, message=FALSE, warning=FALSE}
-library(fpp)
-data <- visitors
-```
-
-
 **(a) Make a time plot of your data and describe the main features of the series.**
 ```{r}
-tsdisplay(data, plot.type="scatter")
+tsdisplay(visitors, plot.type="scatter")
 ```
 
 Iš pirmojo ir antrojo grafikų pastebime, kad egzistuoja sezoniškumas (periodiški kasmetiniai pakilimai ir nuosmūkiai). Iš paskutiniojo grafiko matome, kad egzistuoja stipri tiesinė priklausomybė tarp kintamojo ir jo pirmojo vėlinio.
 
 **(b) Forecast the next two years using Holt-Winters’ multiplicative method.**
 ```{r}
-fit <- hw(data, seasonal="mult", h = 24)
+fit <- hw(visitors, seasonal="mult", h = 24)
 plot(fit)
 ```
 
@@ -123,19 +122,19 @@ Multiplikatyvus sezoniškumas reikalingas, nes duomenų sezoniškumo svyravymai 
 
 **(d) Experiment with making the trend exponential and/or damped.**
 ```{r}
-fit1 <- hw(data, seasonal="mult", h = 24, damped = TRUE)
+fit1 <- hw(visitors, seasonal="mult", h = 24, damped = TRUE)
 plot(fit1)
 ```
 
 Padarius damped pagrindu pagrįstą prognozę, matome, kad išnyksta trendas, duomenys nebekyla, tik išlieka sezoniškumas.
-Padarius eksponentiniu glodinimu pagrįstą prognozę, nepastebime jokių pokyčių, todėl jos grafikai (exponential = TRUE, damped = FALSE ir exponential = TRUE, damped = TRUE) neįtraukti.
+Padarius eksponentiniu glodinimu pagrįstą prognozę, nepastebime jokių skirtumų, todėl jos grafikai (exponential = TRUE, damped = FALSE ir exponential = TRUE, damped = TRUE) neįtraukti.
 
 **(e) Compare the RMSE of the one-step forecasts from the various methods. Which do you prefer?**
 ```{r}
-fit1 <- hw(data, seasonal="mult", h = 24)
-fit2 <- hw(data, seasonal="mult", h = 24, damped = TRUE)
-fit3 <- hw(data, seasonal="mult", h = 24, damped = TRUE, exponential = TRUE)
-fit4 <- hw(data, seasonal="mult", h = 24, exponential = TRUE)
+fit1 <- hw(visitors, seasonal="mult", h = 24)
+fit2 <- hw(visitors, seasonal="mult", h = 24, damped = TRUE)
+fit3 <- hw(visitors, seasonal="mult", h = 24, damped = TRUE, exponential = TRUE)
+fit4 <- hw(visitors, seasonal="mult", h = 24, exponential = TRUE)
 accuracy(fit1)
 accuracy(fit2)
 accuracy(fit3)
@@ -145,7 +144,7 @@ RMSE atžvilgiu damped pagrindu pagrįsta prognozė yra geriausia, nes paklaida 
 
 **(f) Check that the residuals from the best model look like white noise.**
 ```{r}
-Acf(fit2$res, main = "")
+Acf(fit2$res, main = "Liekanos")
 ```
 
 Iš grafiko galime pastebėti, kad tik trys vietos rodo reikšmingą autokoreliaciją. Todėl galime kelti hipotezę, kad liekanos yra baltasis triukšmas.

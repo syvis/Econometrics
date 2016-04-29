@@ -4,6 +4,13 @@ author: "Linas Šyvis"
 output: html_document
 ---
 
+Visų pirma, įsirašome paketus {fpp} ir {expsmooth}. Juose esančius duomenis ir funkcijas naudosime užduotyje.
+```{r, message=FALSE, warning=FALSE}
+library(fpp)
+library(expsmooth)
+data <- expsmooth::visitors
+```
+
 **Sąlyga:**
 
 For this exercise, use the monthly Australian short-term overseas visitors
@@ -12,12 +19,6 @@ package.)
 
 Programos kodas
 ===========================
-
-Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyje.
-```{r, message=FALSE, warning=FALSE}
-library(fpp)
-data <- visitors
-```
 
 **(a) Use ets to find the best model for these data and record the
 training set RMSE. You should find that the best model is
@@ -31,11 +32,16 @@ test <- window(data, start = 2001)
 
 Nustatome, kad geriausias modelis yra ETS(M,A,M) ir išsisaugome training set'o RMSE.
 ```{r}
-plot(visitors)
 ets(train)
 f <- ets(train)
 fc4 <- forecast(f, h = 200)$mean
+plot(visitors)
 lines(fc4, col = "red")
+```
+
+Išbrėžiame ETS testo prognozę (raudona), matome, kad ji gan tiksli, tik didesnis kritimas apie 2004 metus nebuvo prognozuojamas.
+
+```{r}
 rmsea <- subset(accuracy(ets(train)), select = RMSE)
 rmsea
 ```
@@ -87,9 +93,9 @@ Duomenys nebėra sužymėti sezoniškai, todėl "MAM" metodas nebetinkamas progn
 does this occur?**
 
 ```{r}
-plot(e)
+plot(e, main = "Paklaidos")
 abline(0, 0, col = "green")
-plot(visitors)
+plot(visitors, main = "Duomenys visitors")
 ```
 
 Pastebime, kad didėja paklaidų sklaida (vis didesni nukrypimai nuo 0). Taip gali būti dėl to, kad pačių duomenų sklaida bėgant laikui vis didėja.
@@ -98,7 +104,7 @@ Pastebime, kad didėja paklaidų sklaida (vis didesni nukrypimai nuo 0). Taip ga
 from (1a) and (1b)? (Hint: think about the effect of the
 missing values in e.)
 
-(b) dalyje RMSE galimai didesnis dėl to, kad prognozuojame daugiau reikšmių su mažesniu training set'u. (a) dalyje RMSE mažesnis, nes training set'as didesnis (apie 80 proc. duomenų), taip pat prognozuojame mažiau reikšmių, todėl tikimybė suklysti darant prognozę yra mažesnė.
+Dalyje (b) RMSE galimai didesnis dėl to, kad prognozuojame daugiau reikšmių su mažesniu training set'u (turime mažiau empirinių duomenų). (a) dalyje RMSE mažesnis, nes training set'as didesnis (apie 80 proc. duomenų), taip pat prognozuojame mažiau reikšmių į ateitį, todėl, manau, ir tikimybė suklysti darant prognozę yra mažesnė.
 
 **(f) In practice, we will not know that the best model on the whole
 data set is ETS(M,A,M) until we observe all the data. So a more
@@ -131,4 +137,4 @@ rmseb#b dalies RMSE
 rmsef#f dalies RMSE
 ```
 
-(b) ir (f) dalyse gauti RMSE beveik nesiskiria, todėl leisti ets funkcijai kiekvieną kartą rinktis modelį nėra prasmės.
+Dalyse (b) ir (f)  gauti RMSE beveik nesiskiria, todėl leisti ets funkcijai kiekvieną kartą rinktis modelį nėra prasmės.
