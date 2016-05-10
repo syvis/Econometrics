@@ -1,0 +1,445 @@
+---
+title: "Task 14"
+author: "Linas Šyvis"
+output: html_document
+---
+
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyse.
+```{r, message=FALSE, warning=FALSE}
+library(fpp)
+```
+
+#1. 
+
+**Sąlyga:**
+
+For the wmurders data:
+
+(a) if necessary, find a suitable Box-Cox transformation for the data;
+
+(b) fit a suitable ARIMA model to the transformed data using auto.arima();
+
+(c) try some other plausible models by experimenting with the orders chosen;
+
+(d) choose what you think is the best model and check the residual diagnostics;
+
+(e) produce forecasts of your fitted model. Do the forecasts look reasonable?
+
+(f) compare the results with what you would obtain using ets() (with no transformation).
+
+Programos kodas
+===========================
+
+Išbrėžkime duomenų grafiką:
+```{r}
+plot(wmurders)
+```
+
+Matome, kad duomenyse nėra sezoniškumo, nesimato aiškesnių ciklų ar trendo.
+
+**(a) if necessary, find a suitable Box-Cox transformation for the data.**
+
+Šiuo atveju Box-Cox transformacija nėra naudinga dėl duomenyse esančių didelių šuolių, todėl duomenyse nėra prasmės subalansuoti svyravimus.
+
+**(b) fit a suitable ARIMA model to the transformed data using auto.arima().**
+
+```{r}
+auto.arima(wmurders)
+```
+
+Gauname, kad, pagal Auto Arima, geriausias modelis būtų ARIMA(1,2,1).
+
+**(c) try some other plausible models by experimenting with the orders chosen.**
+
+Norėdami surasti kitus tikėtinus modelius, padarykime duomenis stacionariais. Diferencijuokime:
+
+```{r}
+n <- ndiffs(wmurders)
+data <- diff(wmurders, diff = n)
+plot(data)
+```
+
+Duomenys tapo panašūs į stacionarius. Patikrinkime, ar tikrai jie yra stacionarūs su KPSS testu, kur nulinė hipotezė, kad duomenys yra stacionarūs ir alternatyva, kad nėra.
+
+```{r, warning=F}
+kpss.test(data)
+```
+p-value > 0.05, H0 atmetam, remiantis KPSS testu, duomenys yra stacionarūs.
+
+Dabar galime sudaryti naujus modelius (naudosimės ACF ir PACF pagalba).
+```{r, echo=F}
+par(mfrow=c(1,2))
+```
+
+```{r}
+Acf(data)
+Pacf(data)
+```
+
+Iš ACF ir PACF grafikų matome, kad tikėtini modeliai gali būti ARIMA(5,2,0) ir ARIMA(0,2,3) (pagal "Forecasting - Principles and Practice" [Hyndman 2014], 76 psl.).
+
+**(d) choose what you think is the best model and check the residual diagnostics.**
+
+```{r, echo=F}
+par(mfrow=c(1,1))
+```
+
+Iš turimų 3 modelių išsirinkime geriausią:
+
+```{r}
+fit1 <- auto.arima(wmurders)
+Acf(fit1$res)
+```
+
+```{r}
+fit2 <- arima(wmurders, order = c(5,2,0))
+Acf(fit2$res)
+```
+
+```{r}
+fit3 <- arima(wmurders, order = c(0,2,3))
+Acf(fit3$res)
+```
+
+Iš ACF grafikų matome, kad tikėtinai visų trijų modelių liekanos yra baltasis triukšmas. Patikrinkime spėjimą.
+
+Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
+```{r}
+Box.test(fit1$res, type="Lj")
+Box.test(fit2$res, type="Lj")
+Box.test(fit3$res, type="Lj")
+```
+p-value > 0.05 visur, priimame H0, vadinasi galime teigti, kad visų trijų modelių liekanos yra baltasis triukšmas.
+
+Palyginkime modelių tikslumą:
+
+```{r}
+accuracy(fit1)
+accuracy(fit2)
+accuracy(fit3)
+```
+
+Labai aiškių skirtumų nepastebime, tačiau įvertinus modelių tikslumą antrajį modelį (ARIMA(5,2,0)) galime laikyti tiksliausiu.
+
+**(e) produce forecasts of your fitted model. Do the forecasts look reasonable?**
+
+```{r}
+plot(forecast(fit2))
+```
+
+Prognozė atrodo logiška, tačiau, manau, kad ji per daug paveikta prieš tai esančio staigaus kritimo, todėl ją būtų galima pagerinti, padarant prognozės kritimą netokį statų.
+
+**(f) compare the results with what you would obtain using ets() (with no transformation).**
+
+Sukuriame modelį su ETS.
+```{r}
+fit4 <- ets(wmurders)
+Acf(fit4$res)
+Box.test(fit4$res, type="Lj")
+```
+
+Matome, kad modelio liekanos yra baltasis triukšmas (p-value > 0.05).
+
+Palyginkime modelius (pagal sąlygą):
+```{r}
+accuracy(fit2)
+accuracy(fit4)
+```
+
+Gauname, kad tikslesnis yra antrasis (ARIMA(5,2,0)) modelis.
+
+* Išvada: galime teigti, kad yra nemažai tinkamų modelių prognozuoti duomenims wmurders, tačiau, remdamiesi šiuo darbu, išsirinkome ARIMA(5,2,0) kaip geriausią modelį.
+
+
+#2. 
+
+**Sąlyga:**
+
+For the usgdp data:
+
+(a) if necessary, find a suitable Box-Cox transformation for the data;
+
+(b) fit a suitable ARIMA model to the transformed data using auto.arima();
+
+(c) try some other plausible models by experimenting with the orders chosen;
+
+(d) choose what you think is the best model and check the residual diagnostics;
+
+(e) produce forecasts of your fitted model. Do the forecasts look reasonable?
+
+(f) compare the results with what you would obtain using ets() (with no transformation).
+
+Programos kodas
+===========================
+
+Išbrėžkime duomenų grafiką:
+```{r}
+plot(usgdp)
+```
+
+Iš duomenų grafiko aiškiai matome kylimo trendą ir nežymius svyravimus, galime pabandyti pritaikyti Box-Cox transformaciją.
+
+**(a) if necessary, find a suitable Box-Cox transformation for the data.**
+
+```{r}
+lambda21 <- BoxCox.lambda(usgdp)
+plot(BoxCox(usgdp, lambda = lambda21))
+```
+
+Matome, kad Box-Cox duomenis transformacija duomenis tik ištiesino, tačiau mūsų darbe tai nėra reikalinga, nes niekur nenaudosime tiesinio trendo.
+
+**(b) fit a suitable ARIMA model to the transformed data using auto.arima().**
+
+```{r}
+auto.arima(usgdp)
+```
+
+Gauname, kad, pagal auto.arima, geriausias modelis būtų ARIMA(1,2,1).
+
+**(c) try some other plausible models by experimenting with the orders chosen.**
+
+Norėdami surasti kitus tikėtinus modelius, padarykime duomenis stacionariais. Diferencijuokime:
+
+```{r}
+n2 <- ndiffs(usgdp)
+data2 <- diff(usgdp, diff = n2)
+plot(data2)
+```
+
+Duomenys tapo panašūs į stacionarius. Patikrinkime, ar tikrai jie yra stacionarūs su KPSS testu, kur nulinė hipotezė, kad duomenys yra stacionarūs ir alternatyva, kad nėra.
+
+```{r, warning=F}
+kpss.test(data2)
+```
+p-value > 0.05, H0 atmetam, remiantis KPSS testu, duomenys yra stacionarūs.
+
+Dabar galime sudaryti naujus modelius (naudosimės ACF ir PACF pagalba).
+```{r, echo=F}
+par(mfrow=c(1,2))
+```
+
+```{r}
+Acf(data2)
+Pacf(data2)
+```
+
+Iš ACF ir PACF grafikų matome, kad tikėtini modeliai gali būti ARIMA(0,2,12) ir ARIMA(15,2,0) (pagal "Forecasting - Principles and Practice" [Hyndman 2014], 76 psl.).
+
+**(d) choose what you think is the best model and check the residual diagnostics.**
+
+```{r, echo=F}
+par(mfrow=c(1,1))
+```
+
+Iš turimų 3 modelių išsirinkime geriausią:
+
+```{r}
+fit21 <- auto.arima(usgdp)
+Acf(fit21$res)
+```
+
+```{r}
+fit22 <- arima(usgdp, order = c(0,2,12))
+Acf(fit22$res)
+```
+
+```{r}
+fit23 <- arima(usgdp, order = c(15,2,0))
+Acf(fit23$res)
+```
+
+Iš ACF grafikų matome, kad tikėtinai visų trijų modelių liekanos yra baltasis triukšmas. Patikrinkime spėjimą.
+
+Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
+```{r}
+Box.test(fit21$res, type="Lj")
+Box.test(fit22$res, type="Lj")
+Box.test(fit23$res, type="Lj")
+```
+p-value > 0.05 visur, priimame H0, vadinasi galime teigti, kad visų trijų modelių liekanos yra baltasis triukšmas.
+
+Palyginkime modelių tikslumą:
+
+```{r}
+accuracy(fit21)
+accuracy(fit22)
+accuracy(fit23)
+```
+
+Labai aiškių skirtumų nepastebime, tačiau įvertinus modelių tikslumą modelį fit23 (ARIMA(15,2,0)) galime laikyti tiksliausiu.
+
+**(e) produce forecasts of your fitted model. Do the forecasts look reasonable?**
+
+```{r}
+plot(forecast(fit23, h = 50))
+```
+
+Prognozė atrodo logiška.
+
+**(f) compare the results with what you would obtain using ets() (with no transformation).**
+
+Sukuriame modelį su ETS.
+```{r}
+fit24 <- ets(usgdp)
+Acf(fit24$res)
+Box.test(fit24$res, type="Lj")
+```
+
+Matome, kad modelio liekanos yra baltasis triukšmas (p-value > 0.05).
+
+Palyginkime modelius (pagal sąlygą):
+```{r}
+accuracy(fit23)
+accuracy(fit24)
+```
+
+Gauname, kad tikslesnis yra ARIMA(15,2,0) modelis.
+
+* Išvada: remdamiesi šiuo darbu, išsirinkome ARIMA(15,2,0) kaip geriausią modelį.
+
+
+#3. 
+
+**Sąlyga:**
+
+For the mcopper data:
+
+(a) if necessary, find a suitable Box-Cox transformation for the data;
+
+(b) fit a suitable ARIMA model to the transformed data using auto.arima();
+
+(c) try some other plausible models by experimenting with the orders chosen;
+
+(d) choose what you think is the best model and check the residual diagnostics;
+
+(e) produce forecasts of your fitted model. Do the forecasts look reasonable?
+
+(f) compare the results with what you would obtain using ets() (with no transformation).
+
+Programos kodas
+===========================
+
+Išbrėžkime duomenų grafiką:
+```{r}
+plot(mcopper)
+```
+
+Iš duomenų grafiko matome kylimo trendą, taip pat pastebime cikliškumą, galime pabandyti pritaikyti Box-Cox transformaciją.
+
+**(a) if necessary, find a suitable Box-Cox transformation for the data.**
+
+```{r}
+lambda31 <- BoxCox.lambda(mcopper)
+plot(BoxCox(mcopper, lambda = lambda31))
+```
+
+Kadangi duomenyse svyravimai nepastovūs (pvz.: nėra tolydaus svyravimų didėjimo), manau, kad Box-Cox transformacija nėra naudinga, nes nesuvienodina svyravimų.
+
+**(b) fit a suitable ARIMA model to the transformed data using auto.arima().**
+
+```{r}
+auto.arima(mcopper)
+```
+
+Gauname, kad, pagal auto.arima, geriausias modelis būtų ARIMA(0,1,1).
+
+**(c) try some other plausible models by experimenting with the orders chosen.**
+
+Norėdami surasti kitus tikėtinus modelius, padarykime duomenis stacionariais. Diferencijuokime:
+
+```{r}
+n3 <- ndiffs(mcopper)
+data3 <- diff(mcopper, diff = n3)
+plot(data3)
+```
+
+Duomenys tapo panašūs į stacionarius. Patikrinkime, ar tikrai jie yra stacionarūs su KPSS testu, kur nulinė hipotezė, kad duomenys yra stacionarūs ir alternatyva, kad nėra.
+
+```{r, warning=F}
+kpss.test(data3)
+```
+p-value > 0.05, H0 atmetam, remiantis KPSS testu, duomenys yra stacionarūs.
+
+Dabar galime sudaryti naujus modelius (naudosimės ACF ir PACF pagalba).
+```{r, echo=F}
+par(mfrow=c(1,2))
+```
+
+```{r}
+Acf(data3)
+Pacf(data3)
+```
+
+Iš ACF ir PACF grafikų matome, kad tikėtini modeliai gali būti ARIMA(0,1,8) ir ARIMA(14,1,0) (pagal "Forecasting - Principles and Practice" [Hyndman 2014], 76 psl.).
+
+**(d) choose what you think is the best model and check the residual diagnostics.**
+
+```{r, echo=F}
+par(mfrow=c(1,1))
+```
+
+Iš turimų 3 modelių išsirinkime geriausią:
+
+```{r}
+fit31 <- auto.arima(mcopper)
+Acf(fit31$res)
+```
+
+```{r}
+fit32 <- arima(mcopper, order = c(0,1,8))
+Acf(fit32$res)
+```
+
+```{r}
+fit33 <- arima(mcopper, order = c(14,1,0))
+Acf(fit33$res)
+```
+
+Iš ACF grafikų matome, kad tikėtinai visų trijų modelių liekanos yra baltasis triukšmas. Patikrinkime spėjimą.
+
+Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
+```{r}
+Box.test(fit31$res, type="Lj")
+Box.test(fit32$res, type="Lj")
+Box.test(fit33$res, type="Lj")
+```
+p-value > 0.05 visur, priimame H0, vadinasi galime teigti, kad visų trijų modelių liekanos yra baltasis triukšmas.
+
+Palyginkime modelių tikslumą:
+
+```{r}
+accuracy(fit31)
+accuracy(fit32)
+accuracy(fit33)
+```
+
+Labai aiškių skirtumų nepastebime, tačiau įvertinus modelių tikslumą modelį fit33 (ARIMA(14,1,0)) galime laikyti tiksliausiu.
+
+**(e) produce forecasts of your fitted model. Do the forecasts look reasonable?**
+
+```{r}
+plot(forecast(fit33, h = 50))
+```
+
+Prognozė neatrodo logiška, nes nemanau, kad prognozė turėtų būti panaši į konstantą. Galbūt būtų galima pridėti didesnį kritimą dėl to, kad prieš tai buvo staigus kilimas.
+
+**(f) compare the results with what you would obtain using ets() (with no transformation).**
+
+Sukuriame modelį su ETS.
+```{r}
+fit34 <- ets(mcopper)
+Acf(fit34$res)
+Box.test(fit34$res, type="Lj")
+```
+
+Matome, kad modelio liekanos nėra baltasis triukšmas (p-value < 0.05), reiškia modelis tikrai galėtų būti pagerintas.
+
+Palyginkime modelius (pagal sąlygą):
+```{r}
+accuracy(fit33)
+accuracy(fit34)
+```
+
+Gauname, kad tikslesnis yra ARIMA(14,1,0) modelis.
+
+* Išvada: remdamiesi šiuo darbu, išsirinkome ARIMA(14,1,0) kaip geriausią modelį, nors jo prognozė ir galėtų būti pagerinta.

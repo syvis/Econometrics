@@ -1,0 +1,125 @@
+---
+title: "Task 15"
+author: "Linas Šyvis"
+output: html_document
+---
+
+Visų pirma, įsirašome paketą {fpp}. Jame esančius duomenis naudosime užduotyse.
+```{r, message=FALSE, warning=FALSE}
+library(fpp)
+```
+
+**Sąlyga:**
+
+Choose one of the following seasonal time series: condmilk, hsales, uselec.
+
+(a) Do the data need transforming? If so, find a suitable transformation.
+
+(b) Are the data stationary? If not, find an appropriate differencing which yields stationary data.
+
+(c) Identify a couple of ARIMA models that might be useful in describing the time series. Which of your models is the best according to their AIC values?
+
+(d) Estimate the parameters of your best model and do diagnostic testing on the residuals. Do the residuals resemble white noise? If not, try to find another ARIMA model which fits better.
+
+(e) Forecast the next 24 months of data using your preferred model.
+
+(f) Compare the forecasts obtained using ets().
+
+Programos kodas
+===========================
+
+Išbrėžkime duomenų grafiką:
+```{r}
+plot(uselec)
+```
+
+Matome, kad duomenyse yra sezoniškumas, trendas - kylantis.
+
+**(a) Do the data need transforming? If so, find a suitable transformation.**
+
+```{r}
+lambda <- BoxCox.lambda(uselec)
+plot(BoxCox(uselec, lambda = lambda))
+duom <- BoxCox(uselec, lambda = lambda)
+```
+
+Šiuo atveju Box-Cox transformacija naudinga, nes padeda subalansuoti duomenų svyravimus.
+
+**(b) Are the data stationary? If not, find an appropriate differencing which yields stationary data.**
+
+Mūsų duomenys nėra stacionarūs, nes, kaip matėme pradžioje, egzistuoja trendas ir sezoniškumas. Bandysime duomenis padaryti stacionariais diferencijuodami:
+```{r}
+n <- ndiffs(duom)
+duom1 <- diff(duom, diff = n)
+plot(duom1)
+```
+
+Matome, kad duomenyse gali būti išlikes sezoniškumas, todėl diferencijuokime pagal sezoną:
+```{r}
+ns <- nsdiffs(duom1)
+data <- diff(duom1, lag = 12, diff = 1)
+plot(data)
+```
+
+Šie duomenys panašiausi į stacionarius. Nors duomenys galbūt nėra idealiai stacionarūs, tačiau daugiau diferencijuodami galime per daug juos iškreipti.
+
+**(c) Identify a couple of ARIMA models that might be useful in describing the time series. Which of your models is the best according to their AIC values?**
+
+Norėdami surasti tikėtinus modelius, pasinaudokime Auto Arima funkcija.
+```{r, warning=F}
+auto.arima(uselec)
+fit1 <- Arima(uselec, order = c(1,0,0), seasonal = list(order = c(0,1,2), period = 12))#sudarome auto.arima siūlomą modelį
+
+fit2 <- Arima(uselec, order = c(1,0,1), seasonal = list(order = c(0,1,1), period = 12))#sukuriame dar vieną panašų modelį
+```
+
+Palyginame modelius pagal AKAIKE kriterijų.
+```{r}
+AIC(fit1)
+AIC(fit2)
+```
+Pagal AKAIKE, antrasis modelis (fit2) yra geresnis.
+
+**(d) Estimate the parameters of your best model and do diagnostic testing on the residuals. Do the residuals resemble white noise? If not, try to find another ARIMA model which fits better.**
+
+```{r, echo=F}
+fit2
+Acf(fit2$res)
+```
+
+Iš ACF grafiko matome, kad tikėtinai modelio liekanos yra baltasis triukšmas. Patikrinkime spėjimą.
+
+Atliksime Ljung-Box testą, su H0 hipoteze, kad duomenų liekanos yra baltasis triukšmas ir alternatyva, kad nėra.
+```{r}
+Box.test(fit2$res, type="Lj")
+```
+p-value < 0.05, atmetame H0, vadinasi negalime teigti, kad modelio liekanos yra baltasis triukšmas.
+
+Pabandykime surasti geresnį ARIMA modelį.
+
+```{r}
+fit3 <- Arima(uselec, order = c(1,1,0), seasonal = list(order = c(0,1,2), period = 12))
+Acf(fit3$res)
+Box.test(fit3$res, type="Lj")
+```
+Matome, kad duomenų liekanos yra baltasis triukšmas (p-value > 0.05).
+
+**(e) Forecast the next 24 months of data using your preferred model.**
+
+```{r}
+plot(forecast(fit3, h = 24))
+```
+
+Prognozė atrodo logiška, tik manau, kad svyravimai turėtų būtų didesni.
+
+**(f) Compare the forecasts obtained using ets().**
+
+```{r}
+fit4 <- ets(uselec)
+plot(forecast(fit4))
+
+accuracy(fit3)
+accuracy(fit4)
+```
+
+Žiūrint į grafikus, sunku pastebėti skirtumą tarp prognozių, tačiau pagal RMSE, tikslesnė yra pagal ETS grindžiama prognozė.
