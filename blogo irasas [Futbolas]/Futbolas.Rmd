@@ -1,0 +1,137 @@
+---
+title: "Įvarčių pasiskirstymas futbole"
+author: "Linas Šyvis"
+output: html_document
+---
+
+Šiame įraše apžvelgsime bene didžiausią įtaką futbolo rungtynių baigčiai darantį įvykį: pirmąjį įvartį. Škotų futbolo legenda Bill'as Shankly sakydavo, kad įmušus pirmam visad lengviau laimėti. Iš tikro, šį sezoną (2015-2016) Anglijos Premier lygoje komandos įmušusios pirmąjį įvartį [laimėjo 68.4% rungtynių](http://www.soccerstats.com/firstgoal.asp?league=england). Visgi mūsų tikslas yra ne tik įrodyti, kad Bill'as Shankly buvo teisus, bet tiriant pirmojo ivarčio pasiskirstymą, išsiaiškinti, kokį skirstinį turi įvarčiai varžybų tėkmėje ir kokį skirstinį turi varžybų baigtys. Daugiau apie skirstinius galite sužinoti [čia](http://stattrek.com/probability-distributions/probability-distribution.aspx?Tutorial=Stat).
+
+Darbo metu futbolo rungtynes modeliuosime patys. Išvadose remsimės rungtynių simuliacijos gautais rezultatais.
+
+* ####Visų pirma, apibrėžkime, kokias futbolo varžybas modeliuosime.
+
+Modeliuodami futbolo varžybas laikysimės prielaidų:  
+* įvarčiai neturi įtakos vienas kitam (yra nepriklausomi);  
+* laiko intervalai tarp įvarčių modeliuojami eksponentiniu skirstiniu (kuo daugiau laiko praėjo, tuo daugiau šansų, kad įvartis buvo įmuštas) su parametru $\lambda$ = 0.025. Daugiau apie eksponentinį skirstinį [čia](http://mathworld.wolfram.com/ExponentialDistribution.html);  
+* ingoruosime komandų strategijas;  
+* ignoruosime nuobaudas už taisyklių pažeidimą ir traumas;  
+* rungtynės trunka lygiai 90 minučių;  
+* rungtynėse daugiausia gali būti 100 įvarčių.
+
+* ####Modeliuokime futbolo rungtynes.
+```{r}
+y <- 0
+m <- 100 #rungtynėse gali būti daugiausia 100 įvarčių
+eksp <- function()
+{
+  for(i in 1:m)
+  {
+    y[i] <- rexp(1, 0.025) #sugeneruojamas eksponentinis atsitiktinis dydis
+    if(sum(y) > 90)
+    {
+      y = y[-i]
+      break
+    }
+  }
+  return(cumsum(y))
+}
+```
+
+Funkcijoje generuojame eksponentinius atsitiktinius dydžius su pasirinktu parametru tol, kol jų suma viršija 90 (rungtynių laiko limitą) arba kol įmušama 100 įvarčių. Funkcija grąžina reikšmes, kelintą minutę buvo įmušti įvarčiai.
+
+* ####Simuliuokime $n$ rungtynių.
+```{r}
+n <- 100000 #mūsų atveju 100,000 rungtynių užtenka gauti pakankamai aiškius rezultatus ir daryti išvadas
+sim = replicate(n, eksp())
+```
+
+* ####Įvarčių pasiskirstymas varžybų tėkmėje  
+
+```{r, echo=F}
+laikai <- unlist(sim) #išsaugome visų įvarčių laikus
+laikas <- cut(laikai, breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90))
+table(laikas)
+```
+Lentelėje matome, kada ir kiek įvarčių buvo įmušta simuliuojant $n$ rungtynių.
+
+```{r, echo = F}
+hist(laikai, probability = TRUE, main = "Įvarčių pasiskirstymo histograma ir tankis", xlab = "Laikas", ylab = "Tankis")
+lines(density(laikai), col = "red")
+```
+
+Išbrėžiame įvarčių pasiskirstymo varžybų tėkmėje histogramą ir tankio funkciją.
+
+Vaizdas labiausiai primena tolygųjį skirstinį. Jei nesate susipažinę su tolygiuoju skirstiniu, daugiau apie jį galite paskaityti [čia](http://mokslasplius.lt/rizikos-fizika/praktiskai-modeliavime-naudojamu-tikimybiu-skirstiniai).  
+
+* ####Patikrinkime, ar įvarčių pasiskirstymas varžybų tėkmėje išsidėstęs pagal tolygųjį skirstinį.  
+Palyginkime teorinį skirstinį su empiriniu. 
+Sugeneruokime $n$ tolygiųjų atsitiktinių dydžių ir palyginkime jų tankio funkciją su prieš tai gauta įvarčių pasiskirstymo varžybų tėkmėje tankio funkcija.
+```{r, echo=F}
+teor <- runif(100000, min = 0, max = 90)
+plot(density(teor), col = "blue", main = "Teorinio ir empirinio skirstinio tankiai", xlab = "Laikas", ylab = "Tankis")
+lines(density(laikai), col = "red")
+legend("bottom", c("Teorinis", "Empirinis"), col = c("blue", "red"), lty = c(1, 1))
+```
+
+Matome, kad tankio funkcijos turi nemažai panašumų. Visgi, kad įsitikintume geriau, atliksime $\chi^2$ (chi-kvadrato) testą, kuris palygina empirinį skirstinį su teoriniu. Šiuo testu galima formaliai patikrinti, ar turimi duomenys atitinka kokį nors teorinį skirstinį. Mūsų atveju patikrinsime hipotezę, ar įvarčiai varžybų tėkmėje pasiskirstę pagal tolygųji skirstinį su alternatyva, kad nėra pasiskirstę pagal tolygųjį skirstinį. Daugiau apie $\chi^2$ testą rasite [čia](http://stattrek.com/chi-square-test/goodness-of-fit.aspx?Tutorial=AP).
+Chi-kvadrato testo atitikmuo R yra chisq.test funkcija. Jos pirmasis argumentas turi būti empirinių duomenų dažnių vektorius, o antrasis - vektorius sudarytas iš teorinių tikimybių ir papildinio. Daugiau apie chisq.test funkciją pasiskaityti galite [čia](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/chisq.test.html)
+```{r}
+dazn <- as.vector(table(laikas))
+probs <- c(rep(1/9, 8)) #apskaičiuojame teorines tolygiojo skirstinio tikimybes
+#chisq.test funkcija reikalauja, kad papildinys nebūtų tuščias, todėl intervalo (80;90] tikimybę paliekame jam
+papild <- (1 - sum(probs)) #randame papildinį
+chisq.test(dazn, p = c(probs, papild)) #atliekame chi-kvadrato testą
+```
+
+p-value > 0.05, tai reiškia, kad neturime pagrindo atmesti nulinę hipotezę. Vadinasi $\chi^2$ testas mums leidžia teigti, kad įvarčiai varžybų tėkmėje pasiskirstę pagal tolygųjį skirstinį.  
+  
+Remdamiesi šio testo rezultatais galime teigti, kad, iš tikro, per mūsų futbolo rungtynes, kiekvienu laiko momentu įmušti įvartį yra vienoda tikimybė.
+
+O kaip pasiskirsčiusios varžybų baigtys (kiek įvarčių įmušama per runtynes)?
+
+* ####Varžybų baigčių pasiskirtymas 
+
+```{r, echo=F}
+ivarciai <- sapply(sim, length) #išsaugome įvačių kiekį per kiekvienas varžybas
+table(ivarciai)
+```
+Lentelėje matome, kiek rungtynių (apatinė eilutė) baigėsi su atitinkamu skaičiu įvarčių (viršutinė eilutė).
+
+```{r, echo = F}
+hist(ivarciai, probability = TRUE, breaks = -1:13, main = "Rungtynių baigčių histograma ir tankis", xlab = "Įvarčiai", ylab = "Tankis")
+lines(density(ivarciai, bw = 0.5), col = "purple")
+```
+
+Išbrėžiame varžybų baigčių pasiskirstymo histogramą ir tankio funkciją.
+
+Vaizdas labiausiai primena Poisson'o skirstinį. Jei nesate susipažinę su Poisson'o skirstiniu, daugiau apie jį galite paskaityti [čia](https://www.umass.edu/wsp/resources/poisson/).  
+
+* ####Patikrinkime, ar varžybų baigčių pasiskirstymas išsidėstęs pagal Poisson'o skirstinį.  
+
+Palyginkime teorinį skirstinį su empiriniu. 
+Sugeneruokime $n$ Poisson'o atsitiktinių dydžių ir palyginkime jų tankio funkciją su prieš tai gauta varžybų baigčių tankio funkcija.
+
+```{r, echo=F}
+teor <- rpois(100000, lambda = mean(ivarciai))
+plot(density(teor, bw = 0.5), col = "blue", main = "Teorinio ir empirinio skirstinio tankiai", xlab = "Įvarčiai", ylab = "Tankis")
+lines(density(ivarciai, bw = 0.5), col = "red")
+legend("topright", c("Teorinis", "Empirinis"), col = c("blue", "red"), lty = c(1, 1))
+```
+
+Tankio funkcijos yra kone identiškos. Dėl šventos ramybės dar atlikime $\chi^2$ (chi-kvadrato) testą. Šiuo atveju patikrinsime hipotezę, ar varžybų baigtys pasiskirsčiusios pagal tolygųji skirstinį su alternatyva, kad nėra pasiskirsčiusios pagal tolygųjį skirstinį.
+
+```{r, warning=F}
+dazn <- as.vector(table(ivarciai))
+probs = dpois(0:(length(dazn)-2), lambda = mean(ivarciai)) #generuojame teorines Poisson'o skirstinio tikimybes
+#kad papildinys nebūtų tuščias ir nebūtų metama klaida, sugeneruojame viena tikimybe mažiau
+papild <- (1 - sum(probs)) #randame papildinį
+chisq.test(dazn, p = c(probs, papild)) #atliekame chi-kvadrato testą
+```
+
+p-value > 0.05, tai reiškia, kad neturime pagrindo atmesti nulinę hipotezę. Vadinasi $\chi^2$ testas mums leidžia teigti, kad įvarčių baitys pasiskirsčiusios pagal Poisson'o skirstinį.  
+  
+Remdamiesi šio testo rezultatais galime teigti, kad per mūsų futbolo rungtynes dažniausiai įmušama 2-3 įvarčiai. Todėl jei komanda sugeba įmušti pirma, ji iš tikrųjų įgija nemažą pranašumą.
+
+
+* ####Išvada:
+Įsitikinome, kad jei laiko tarpai tarp įvarčių modeliuojami eksponentiniu skirstiniu, įvarčiai varžybų tėkmėje yra pasiskirstę pagal tolygųjį skirstinį, o varžybų baigtys pasiskirsčiusios pagal Poisson'o skirstinį. Šiame įraše pamatėme, kaip žiūrėdami iš įvairių perspektyvų galime pastebėti skirtingus skirstinius, ir kaip skirtingi skirstiniai gali būti glaudžiai susiję tarpusavy.
