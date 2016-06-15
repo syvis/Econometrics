@@ -18,7 +18,9 @@ a)
 **Randame teorinį skirstinį.**
 (x turi normalųjį skirstinį, nes bet kuri tiesinė normaliųjų ats. dydžių kombinacija yra normalusis ats. dydis, su vidurkiu 2 ir dispersija 5)
 ```{r}
-$X_1 \sim N(3, 2)$, $X_2 \sim N(-1, 3)$ ir $X \sim N(3-1, 2+3)$.
+skirst <- as.numeric(0)
+for(i in -20:20)
+skirst[i] <- dnorm(i, mean = 2, sd = 3)
 ```
 
 
@@ -50,19 +52,26 @@ Tankių grafikai
 ```{r}
 hist(sim, probability = TRUE)
 lines(density(sim, bw = 0.5), col = "purple")
-lines(tikimybe, col = "green")
+lines(skirst, col = "green")
 ```
+
+Matome, kad tankio funkcijos išties panašios.
 
 Skirstinio charakteristikos
 ```{r}
 mean(sim)
-mean(reiksm)
+mean(2)
 median(sim)
-median(reiksm)
+median(skirst)
 var(sim)
-var(reiksm)
+var(5)
 ```
 
+d)
+Monte Carlo:
+```{r}
+tik <- mean(replicate(10000,((sum(eksp()))^2 - mean(sum(eksp())) - 2))>0)
+```
 
 
 #2 užduotis
