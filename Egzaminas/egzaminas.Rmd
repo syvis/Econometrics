@@ -71,7 +71,9 @@ d)
 Monte Carlo:
 ```{r}
 tik <- mean(replicate(10000,((sum(eksp()))^2 - mean(sum(eksp())) - 2))>0)
+tik
 ```
+
 
 
 #2 užduotis
@@ -276,7 +278,6 @@ b)
 ```{r}
 fitMain1 <- lm(islaidosVaisiams ~ butinosIslaidos + pajamos + rajonoId + atstumasIkiParduotuves, data = testSet)
 f1 <- forecast(fitMain, trainSet)
-plot(f1, testSet$pajamos)
 ```
 
 
@@ -496,12 +497,4 @@ Pagal RMSE tiksliausiai atrodo ARIMA(0,1,13)(1,0,2)[4] modelis.
 ```{r}
 modMain <- Arima(trainSet, order=c(0,1,13), seasonal=c(1,0,2))
 ```
-
-4)
-
-```{r}
-tikslumas
-subset = 
-```
-
 
