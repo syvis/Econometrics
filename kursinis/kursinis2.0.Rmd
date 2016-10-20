@@ -46,14 +46,8 @@ library(dplyr)
 **Nuskaitome duomenis.**
 ```{r}
 rawdata <- read.csv2("2003-2015.csv", header = T)
-agreguoti <- read.csv2("agreguoti2009-2015.csv", header = T)
 gyventojai <- read.csv2("gyventojai.csv", header = T, skip = 1)
 kor <- read.csv2("koreliacijos.csv", header = T)
-```
-
-**Apžvelgiame duomenis**
-```{r}
-sapply(c(rawdata, agreguoti, gyventojai), head)
 ```
 
 #Tvarkome duomenis
@@ -69,9 +63,7 @@ Turime stulpelius "Gimimo data" ir "Stazas". Jų reikšmės tikėtinai stipriai 
 **Stulpelį "Gimimo data" pertvarkome į "Amzius".**
 ```{r, tidy = T}
 Amzius <- as.numeric(format(Sys.Date(), format="%Y")) - as.numeric(format(as.Date(data$Gimimo_data, format="%Y"), format = "%Y"))
-data <- data[,-22]
 data <- cbind(data, Amzius)
-head(data$Amzius)
 ```
 
 Dabar turime eismo įvykių dalyvių amžių, kuro koreliaciją su stažu galime patikrinti.
@@ -83,23 +75,22 @@ sum(is.na(data$Amzius))
 cor(data$Amzius, data$Stazas, use = "pairwise.complete.obs")
 ```
 
-Matome, kad koreliacijos koeficientas gana didelis, todėl galėsime pašalinti amžiaus arba stažo stulpelį.
-
-```{r}
-table(data$Blaivumas)
-```
-
+#Tvarkom Blaivumo stulpelį
 Matome, kad stulpelį "Blaivumas" sudaro 6 skirtingos reikšmės. Sutrauksime jas visas į "Blaivus" ir "Neblaivus".
 ```{r, tidy = T}
-data[data[, "Blaivumas"] %in% c("Apsvaiges nuo narkotiniu, psichotropiniu ar kitu psichika veikianciu medziagu", "Atsisake buti patikrintas"), "Blaivumas"] <- "Neblaivus"
+data[data[, "Blaivumas"] %in% c("Apsvaiges nuo narkotiniu, psichotropiniu ar kitu psichika veikianciu medziagu", "Atsisake buti patikrintas", "Neblaivus"), "Blaivumas"] <- "Neblaivus"
 data$Blaivumas <- factor(data$Blaivumas)
 table(data$Blaivumas)
 ```
 
-**Šalinsime nereikalingas reikšmes.**
+#Tvarkom Meteo salygų stulp.
 ```{r}
-sapply(lapply(data, is.na), sum)
+data[data[, "Meteorologines_salygos"] == "Lijundra", "Meteorologines_salygos"] <- "Lietus"
+data[data[, "Meteorologines_salygos"] == "Puga", "Meteorologines_salygos"] <- "Sniegas, krusa"
+data$Meteorologines_salygos <- factor(data$Meteorologines_salygos)
+table(data$Meteorologines_salygos)
 ```
+
 
 Kai kurie stulpeliai turi NA reikšmių, reikia jas pašalinti.
 ```{r, tidy = T}
@@ -150,47 +141,63 @@ names(tukstgyv)<-sprintf(miestai)
 ```
 
 **Brėžiame grafiką.**
-```{r, warning=F, tidy = T}
-plot(0, type = "n", xlim = c(2003,2015), ylim = c(0,0.3), yaxs="i", xaxs="i", main = "Įvykių skaičius 1000-iui gyventojų", xlab = "Įvykių sk. 1000 gyv.", ylab = "Laikas", axes=F)
+```{r}
+plot(0, type = "n", xlim = c(2003,2015), ylim = c(0,0.3), yaxs="i", xaxs="i", main = "Įvykių skaičius 1000-iui gyventojų", ylab = "Įvykių sk. 1000 gyv.", xlab = "Laikas", axes=F)
 par(xaxp=c(2003, 2015, 12), yaxp=c(0, 0.3, 6))
 axis(1)
 axis(2)
 for(i in 1:5)
-  lines(tukstgyv[,i], col = i, lwd = 2)
-legend("topright", col = c(1:5), lty = 1, lwd = 2, legend = c("Vilnius", "Kaunas", "Klaipėda", "Šiauliai", "Panevėžys"), pt.cex = 1, cex = 0.45, text.width = 1)
+  lines(tukstgyv[,i], col = i, lwd = 1)
+legend("topright", col = c(1:5), lty = 1, lwd = 1, legend = c("Vilnius", "Kaunas", "Klaipėda", "Šiauliai", "Panevėžys"), pt.cex = 1, cex = 0.45, text.width = 1)
 ```
 
 [Reikalingi komentarai]
+**Pagalbiniai stulpeliai**
+```{r}
+diena <- ndata$Paros_metas == "Diena"
+diena <- diena * 1
+moteris <- ndata$Lytis == "Moteris"
+moteris <- moteris * 1
+asfaltas <- ndata$Dangos_rusis == "Asfaltbetonis, cementbetonis"
+asfaltas <- asfaltas * 1
+zvyras <- ndata$Dangos_rusis == "zvyrkelis"
+zvyras <- zvyras * 1
+slapia <- ndata$Dangos_bukle == "slapia"
+slapia <- slapia * 1
+giedra <- ndata$Meteorologines_salygos == "Giedra"
+giedra <- giedra * 1
 
-**Palyginsime proporcijas**
-```{r, eval=F}
-neblaivus <- as.numeric(0)
-blaivus <- as.numeric(0)
-for(i in 1:5)
-neblaivus[i] <- nrow(data[data[,25] == Neblaivus & data[,1] == miestai[i],]) / gyventojai[gyventojai[,1] == 2015 & gyventojai[,2] == miestai[i], 6]
-rbind(miestai, round(neblaivus, digits = 3))
+ndata <- cbind(ndata, diena, moteris, asfaltas, zvyras, slapia, giedra)
+```
 
-for(i in 1:5)
-neblaivus[i] <- nrow(data[data[,25] == Neblaivus & data[,1] == miestai[i],])
-for(i in 1:5)
-blaivus[i] <- nrow(data[data[,25] == Blaivus & data[,1] == miestai[i],])
+**Sukuriam miestų lenteles**
+```{r}
+by_year <- group_by(ndata, format(as.Date(ndata$Data, format="%Y-%m-%d"),"%Y"), Vieta)
+metiniai <- summarise(by_year, sum(Kaltas), sum(data$Blaivumas == "Neblaivus", na.rm=T), sum(diena)/sum(Kaltas), sum(moteris)/sum(Kaltas), sum(asfaltas)/sum(Kaltas), sum(zvyras)/sum(Kaltas), sum(slapia)/sum(Kaltas), sum(giedra)/sum(Kaltas))
+colnames(metiniai) <- list("Data", "Vieta", "Ivykiai", "Neblaivus", "Diena", "Moteris", "Asfaltas", "Zvyras", "Slapia_danga", "Giedra")
 
-tab <-matrix(c(59, 434, 25, 269, 9, 138, 13, 90, 3, 93), nrow=5, byrow=T)
-colnames(tab) <- c(taip, ne)
-rownames(tab) <- miestai
-prop.test(tab)
+vilnius <- data.frame(metiniai[metiniai$Vieta == "Vilniaus m. sav.", 5:10])
+kaunas <- data.frame(metiniai[metiniai$Vieta == "Kauno m. sav.", 5:10])
+siauliai <- metiniai[metiniai$Vieta == "Siauliu m. sav.", 5:10]
+panevezys <- metiniai[metiniai$Vieta == "Panevezio m. sav.", 5:10]
+klaipeda <- metiniai[metiniai$Vieta == "Klaipedos m. sav.", 5:10]
+```
+
+```{r}
+chisq.test(vilnius[,i], kaunas[,i])
+
 ```
 
 Matome, kad p-value < 0.05, vadinasi H0 atmetam. Proporcijos statistiškai reikšmingai skiriasi. Patikrinkime tarp kurių miestų proporcijos yra statistiškai reikšmingai skirtingos.
 
-```{r, warning = F, eval=F}
+```{r, warning = F, eval=F, echo=F}
 pairwise.prop.test(tab, p.adjust.method = "none")
 ```
 
 Proporcijos statistiškai reikšmingai skiriasi tarp Šiauliu m. sav. ir Panevėžio m. sav. ir tarp Vilniaus m. sav. ir Panevėžio m. sav.
 Patikrinkime, ar Šiauliuose/Vilniuje įvykių dėl neblaivių vairuotojų kaltės yra statistiškai reikšmingai daugiau negu Panevėžyje.
 
-```{r}
+```{r, eval=F, echo=F}
 tab1 <-matrix(c(13, 90, 3, 93), nrow=2, byrow=T)
 prop.test(tab1, alternative = "greater")
 
@@ -202,19 +209,19 @@ Paaiškėjo, kad Šiauliuose/Vilniuje įvykių dėl neblaivių vairuotojų kalt�
 
 
 #Tikrinam įvykių priklausomybę nuo amžiaus
-```{r}
+```{r, eval=F, echo=F}
 stazas <- cut(data[,24], breaks = c(0, 10, 20, 30, 40, 50, 60))
 table(stazas)
 ```
 
 
 #Forecastinam autoįvykius
-```{r, eval=F}
+```{r, eval=F, echo=F}
 b <- ts(agreguoti[agreguoti[,3] == "Vilniaus m. sav.", 4], start=c(2009,1), frequency = 12)
 plot(b)
 ```
 
-```{r, eval=F}
+```{r, eval=F, echo=F}
 z <- auto.arima(b)
 plot(forecast(z, h = 12))
 #salinam sezona
@@ -229,7 +236,7 @@ Tikrinsime hipoteze ar Vilniaus mieste eismo ivykiu kaltininkai dazniau yra Vyra
 
 H0= V sk. = 
 
-```{r}
+```{r, eval=F, echo=F}
 Vilniusm <- rawdata[rawdata[,1] == "Vilniaus m. sav.",]
 Kaunasm <- rawdata[rawdata[,1] == "Kauno m. sav.",]
 Siauliaim <- rawdata[rawdata[,1] == "siauliu m. sav.",]
@@ -243,7 +250,7 @@ Panevezysm <- rawdata[rawdata[,1] == "Panevezio m. sav.",]
 
 Kaltininku procentas Vilniaus mieste.
 
-```{r}
+```{r, eval=F, echo=F}
 vyruskV<-sum(na.omit(as.numeric(Vilniusm[,19]=="Vyras")))
 moteruskV<-sum(na.omit(as.numeric(Vilniusm[,19]=="Moteris")))
 visoV<-(vyruskV+moteruskV)
@@ -253,7 +260,7 @@ moteruprocV=moteruskV/visoV*100
 
 Kaltininku procentas Kauno mieste.
 
-```{r}
+```{r, eval=F, echo=F}
 vyruskK<-sum(na.omit(as.numeric(Kaunasm[,19]=="Vyras")))
 moteruskK<-sum(na.omit(as.numeric(Kaunasm[,19]=="Moteris")))
 visoK<-(vyruskK+moteruskK)
@@ -263,7 +270,7 @@ moteruprocK=moteruskK/visoK*100
 
 Kaltininku procentas Siauliu mieste.
 
-```{r}
+```{r, eval=F, echo=F}
 vyruskS<-sum(na.omit(as.numeric(Siauliaim[,19]=="Vyras")))
 moteruskS<-sum(na.omit(as.numeric(Siauliaim[,19]=="Moteris")))
 visoS<-(vyruskS+moteruskS)
@@ -274,7 +281,7 @@ moteruprocS=moteruskS/visoS*100
 
 Kaltininku procentas Klaipedos mieste.
 
-```{r}
+```{r, eval=F, echo=F}
 vyruskKl<-sum(na.omit(as.numeric(Klaipedam[,19]=="Vyras")))
 moteruskKl<-sum(na.omit(as.numeric(Klaipedam[,19]=="Moteris")))
 visoKl<-(vyruskKl+moteruskKl)
@@ -284,7 +291,7 @@ moteruprocKl=moteruskKl/visoKl*100
 
 Kaltininku procentas Panevezio mieste.
 
-```{r}
+```{r, eval=F, echo=F}
 vyruskP<-sum(na.omit(as.numeric(Panevezysm[,19]=="Vyras")))
 moteruskP<-sum(na.omit(as.numeric(Panevezysm[,19]=="Moteris")))
 visoP<-(vyruskP+moteruskP)
@@ -296,13 +303,13 @@ moteruprocP=moteruskP/visoP*100
 
 Tikrinsime hipoteze ar Vilniaus mieste eismo ivykiu kaltininkai dazniau yra Vyrai nei moterys.
 
-```{r}
+```{r, eval=F, echo=F}
 Vilniusm <- rawdata[rawdata[,1] == "Vilniaus m. sav.",]
 sum(Vilniusm[,"Lytis"]=="Vyras")
 ```
 
 #koreliacijos
-```{r}
+```{r, eval=F, echo=F}
 
 kor1 <- kor[-c(1,2,3),-c(1,2,3,5,8)]
 kor1[,4] <- as.numeric(levels(kor1[,4]))[kor1[,4]]
@@ -312,6 +319,8 @@ cor(kor1)
 
 Palyginti zuvusiu/suzeistu menesinius vidurkius tarp laikotarpiu ir vietu.
 Ar skiriasi ivykiu skaicius nakti ir diena?
+
+\newpage
 
 #Literatūra
 

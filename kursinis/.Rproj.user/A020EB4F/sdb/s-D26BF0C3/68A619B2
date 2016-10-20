@@ -1,0 +1,28 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1476954944179.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "68A619B2",
+    "lastKnownWriteTime" : 0,
+    "last_content_update" : 1476954944179,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "4y9e95oeo7",
+        "caption" : "metiniai",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=metiniai&cache_key=4y9e95oeo7",
+        "displayedObservations" : 65,
+        "environment" : "",
+        "object" : "metiniai",
+        "totalObservations" : 65,
+        "variables" : 10
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
