@@ -94,7 +94,7 @@ table(data$Meteorologines_salygos)
 
 Kai kurie stulpeliai turi NA reikšmių, reikia jas pašalinti.
 ```{r, tidy = T}
-salinamieji <- c("Lytis", "Apgadintu_transporto_priemoniu_skaicius", "Pilietybe", "Neigalumas", "Blaivumas", "Amzius")
+salinamieji <- c("Lytis", "Blaivumas")
 ndata <- data[complete.cases(data[salinamieji]),]
 sapply(lapply(ndata, is.na), sum)
 ```
@@ -152,8 +152,15 @@ legend("topright", col = c(1:5), lty = 1, lwd = 1, legend = c("Vilnius", "Kaunas
 ```
 
 [Reikalingi komentarai]
+
+
+CHIKVADRATAI IR BLOKUOTA ANOVA
+=================================================================
+
 **Pagalbiniai stulpeliai**
 ```{r}
+neblaivus <- ndata$Blaivumas == "Neblaivus"
+neblaivus <- neblaivus * 1
 diena <- ndata$Paros_metas == "Diena"
 diena <- diena * 1
 moteris <- ndata$Lytis == "Moteris"
@@ -167,45 +174,82 @@ slapia <- slapia * 1
 giedra <- ndata$Meteorologines_salygos == "Giedra"
 giedra <- giedra * 1
 
-ndata <- cbind(ndata, diena, moteris, asfaltas, zvyras, slapia, giedra)
+ndata <- cbind(ndata, neblaivus, diena, moteris, asfaltas, zvyras, slapia, giedra)
 ```
 
-**Sukuriam miestų lenteles**
+**Met-men**
 ```{r}
-by_year <- group_by(ndata, format(as.Date(ndata$Data, format="%Y-%m-%d"),"%Y"), Vieta)
-metiniai <- summarise(by_year, sum(Kaltas), sum(data$Blaivumas == "Neblaivus", na.rm=T), sum(diena)/sum(Kaltas), sum(moteris)/sum(Kaltas), sum(asfaltas)/sum(Kaltas), sum(zvyras)/sum(Kaltas), sum(slapia)/sum(Kaltas), sum(giedra)/sum(Kaltas))
-colnames(metiniai) <- list("Data", "Vieta", "Ivykiai", "Neblaivus", "Diena", "Moteris", "Asfaltas", "Zvyras", "Slapia_danga", "Giedra")
+by_yearmon <- group_by(ndata, format(as.Date(ndata$Data, format="%Y-%m-%d"), "%Y-%m"), Vieta)
+metmen <- summarise(by_yearmon, sum(Kaltas), sum(neblaivus), sum(diena)/sum(Kaltas), sum(moteris)/sum(Kaltas), sum(asfaltas)/sum(Kaltas), sum(zvyras)/sum(Kaltas), sum(slapia)/sum(Kaltas), sum(giedra)/sum(Kaltas))
+colnames(metmen) <- list("Data", "Vieta", "Ivykiai", "Neblaivus", "Diena", "Moteris", "Asfaltas", "Zvyras", "Slapia_danga", "Giedra")
 
-vilnius <- data.frame(metiniai[metiniai$Vieta == "Vilniaus m. sav.", 5:10])
-kaunas <- data.frame(metiniai[metiniai$Vieta == "Kauno m. sav.", 5:10])
-siauliai <- metiniai[metiniai$Vieta == "Siauliu m. sav.", 5:10]
-panevezys <- metiniai[metiniai$Vieta == "Panevezio m. sav.", 5:10]
-klaipeda <- metiniai[metiniai$Vieta == "Klaipedos m. sav.", 5:10]
+mot <- function(i) 
+  ts(metmen[metmen[, "Vieta"] == i, "Moteris"], start = c(2003,1), frequency = 12)
+moter <- sapply(miestai, mot)
+
+slap <- function(i) 
+  ts(metmen[metmen[, "Vieta"] == i, "Slapia_danga"], start = c(2003,1), frequency = 12)
+sla <- sapply(miestai, slap)
+
+gied <- function(i) 
+  ts(metmen[metmen[, "Vieta"] == i, "Giedra"], start = c(2003,1), frequency = 12)
+gie <- sapply(miestai, gied)
+
+plot(0, type = "n", xlim = c(2003,2015), ylim = c(0,0.7), yaxs="i", xaxs="i", main = "Įvykių sk., kai negiedras dangus", ylab = "Įvykių sk.", xlab = "Laikas", axes=F)
+par(xaxp=c(2003, 2015, 12), yaxp=c(0, 0.7, 14))
+axis(1)
+axis(2)
+for(i in 1:5)
+  lines(ts((moter[,i]), start = c(2003,1), frequency = 12), col = i, lwd = 1)
+legend("topleft", col = c(1:5), lty = 1, lwd = 1, legend = c("Vilnius", "Kaunas", "Klaipėda", "Šiauliai", "Panevėžys"), pt.cex = 1, cex = 0.45, text.width = 1)
+
+
+```
+
+**Met**
+```{r}
+by_year <- group_by(ndata, format(as.Date(ndata$Data, format="%Y-%m-%d"), "%Y"), Vieta)
+met <- summarise(by_year, sum(Kaltas), sum(neblaivus)/sum(Kaltas), sum(diena)/sum(Kaltas), sum(moteris)/sum(Kaltas), sum(asfaltas)/sum(Kaltas), sum(zvyras)/sum(Kaltas), sum(slapia)/sum(Kaltas), sum(giedra)/sum(Kaltas))
+colnames(met) <- list("Data", "Vieta", "Ivykiai", "Neblaivus", "Diena", "Moteris", "Asfaltas", "Zvyras", "Slapia_danga", "Giedra")
+
+mot <- function(i) 
+  ts(met[met[, "Vieta"] == i, "Moteris"], start = c(2003,1), frequency = 1)
+moter <- sapply(miestai, mot)
+
+nebl <- function(i) 
+  ts(met[met[, "Vieta"] == i, "Neblaivus"], start = c(2003,1), frequency = 1)
+neb <- sapply(miestai, nebl)
+
+plot(0, type = "n", xlim = c(2003,2015), ylim = c(0,0.3), yaxs="i", xaxs="i", main = "Įvykių sk. dėl neblaiviu", ylab = "Įvykių sk.", xlab = "Laikas", axes=F)
+par(xaxp=c(2003, 2015, 12), yaxp=c(0, 0.3, 6))
+axis(1)
+axis(2)
+for(i in 1:5)
+  lines(ts(neb[,i], start = c(2003,1), frequency = 1), col = i, lwd = 1)
+legend("topleft", col = c(1:5), lty = 1, lwd = 1, legend = c("Vilnius", "Kaunas", "Klaipėda", "Šiauliai", "Panevėžys"), pt.cex = 1, cex = 0.45, text.width = 1)
 ```
 
 ```{r}
-chisq.test(vilnius[,i], kaunas[,i])
 
+lenteles <- function(i)
+matrix(c(as.matrix(met[met$Vieta == "Vilniaus m. sav.", i]), as.matrix(met[met$Vieta == "Kauno m. sav.", i]), as.matrix(met[met$Vieta == "Klaipedos m. sav.", i]), as.matrix(met[met$Vieta == "Siauliu m. sav.", i]), as.matrix(met[met$Vieta == "Panevezio m. sav.", i])), byrow = T)
+
+kintamieji <- c("Neblaivus", "Diena", "Moteris", "Slapia_danga", "Giedra")
+lentelex <- as.matrix(sapply(kintamieji, lenteles))
+colnames(lentelex) <- kintamieji
+
+metai <- as.factor(rep(rep(2003:2015), 5))
+miestas <- as.factor(rep(miestai, each = 13))
+uzkniso <- function(i){
+  lenta <- data.frame(metai, miestas, lentelex[,i])
+  mod <- aov(lentelex[,i] ~ miestas)
+  anova(mod)
+}
+lapply(1:5, uzkniso)
 ```
 
-Matome, kad p-value < 0.05, vadinasi H0 atmetam. Proporcijos statistiškai reikšmingai skiriasi. Patikrinkime tarp kurių miestų proporcijos yra statistiškai reikšmingai skirtingos.
 
-```{r, warning = F, eval=F, echo=F}
-pairwise.prop.test(tab, p.adjust.method = "none")
-```
-
-Proporcijos statistiškai reikšmingai skiriasi tarp Šiauliu m. sav. ir Panevėžio m. sav. ir tarp Vilniaus m. sav. ir Panevėžio m. sav.
-Patikrinkime, ar Šiauliuose/Vilniuje įvykių dėl neblaivių vairuotojų kaltės yra statistiškai reikšmingai daugiau negu Panevėžyje.
-
-```{r, eval=F, echo=F}
-tab1 <-matrix(c(13, 90, 3, 93), nrow=2, byrow=T)
-prop.test(tab1, alternative = "greater")
-
-tab2 <-matrix(c(59, 434, 3, 93), nrow=2, byrow=T)
-prop.test(tab2, alternative = "greater")
-```
-
-Paaiškėjo, kad Šiauliuose/Vilniuje įvykių dėl neblaivių vairuotojų kaltės yra statistiškai reikšmingai daugiau negu Panevėžyje.
+=====================================================================
 
 
 #Tikrinam įvykių priklausomybę nuo amžiaus
@@ -232,93 +276,7 @@ plot(ser)
 ```
 
 
-Tikrinsime hipoteze ar Vilniaus mieste eismo ivykiu kaltininkai dazniau yra Vyrai nei moterys.
 
-H0= V sk. = 
-
-```{r, eval=F, echo=F}
-Vilniusm <- rawdata[rawdata[,1] == "Vilniaus m. sav.",]
-Kaunasm <- rawdata[rawdata[,1] == "Kauno m. sav.",]
-Siauliaim <- rawdata[rawdata[,1] == "siauliu m. sav.",]
-Klaipedam <- rawdata[rawdata[,1] == "Klaipedos m. sav.",]
-Panevezysm <- rawdata[rawdata[,1] == "Panevezio m. sav.",]
-
-```
-
-
-### Kaltininku procentas miestuose (Vyrai/Moterys)
-
-Kaltininku procentas Vilniaus mieste.
-
-```{r, eval=F, echo=F}
-vyruskV<-sum(na.omit(as.numeric(Vilniusm[,19]=="Vyras")))
-moteruskV<-sum(na.omit(as.numeric(Vilniusm[,19]=="Moteris")))
-visoV<-(vyruskV+moteruskV)
-vyruprocV=vyruskV/visoV*100
-moteruprocV=moteruskV/visoV*100
-```
-
-Kaltininku procentas Kauno mieste.
-
-```{r, eval=F, echo=F}
-vyruskK<-sum(na.omit(as.numeric(Kaunasm[,19]=="Vyras")))
-moteruskK<-sum(na.omit(as.numeric(Kaunasm[,19]=="Moteris")))
-visoK<-(vyruskK+moteruskK)
-vyruprocK=vyruskK/visoK*100
-moteruprocK=moteruskK/visoK*100
-```
-
-Kaltininku procentas Siauliu mieste.
-
-```{r, eval=F, echo=F}
-vyruskS<-sum(na.omit(as.numeric(Siauliaim[,19]=="Vyras")))
-moteruskS<-sum(na.omit(as.numeric(Siauliaim[,19]=="Moteris")))
-visoS<-(vyruskS+moteruskS)
-vyruprocS=vyruskS/visoS*100
-moteruprocS=moteruskS/visoS*100
-```
-
-
-Kaltininku procentas Klaipedos mieste.
-
-```{r, eval=F, echo=F}
-vyruskKl<-sum(na.omit(as.numeric(Klaipedam[,19]=="Vyras")))
-moteruskKl<-sum(na.omit(as.numeric(Klaipedam[,19]=="Moteris")))
-visoKl<-(vyruskKl+moteruskKl)
-vyruprocKl=vyruskKl/visoKl*100
-moteruprocKl=moteruskKl/visoKl*100
-```
-
-Kaltininku procentas Panevezio mieste.
-
-```{r, eval=F, echo=F}
-vyruskP<-sum(na.omit(as.numeric(Panevezysm[,19]=="Vyras")))
-moteruskP<-sum(na.omit(as.numeric(Panevezysm[,19]=="Moteris")))
-visoP<-(vyruskP+moteruskP)
-vyruprocP=vyruskP/visoP*100
-moteruprocP=moteruskP/visoP*100
-```
-
-
-
-Tikrinsime hipoteze ar Vilniaus mieste eismo ivykiu kaltininkai dazniau yra Vyrai nei moterys.
-
-```{r, eval=F, echo=F}
-Vilniusm <- rawdata[rawdata[,1] == "Vilniaus m. sav.",]
-sum(Vilniusm[,"Lytis"]=="Vyras")
-```
-
-#koreliacijos
-```{r, eval=F, echo=F}
-
-kor1 <- kor[-c(1,2,3),-c(1,2,3,5,8)]
-kor1[,4] <- as.numeric(levels(kor1[,4]))[kor1[,4]]
-cor(kor1)
-```
-
-
-Palyginti zuvusiu/suzeistu menesinius vidurkius tarp laikotarpiu ir vietu.
-Ar skiriasi ivykiu skaicius nakti ir diena?
 
 \newpage
 
